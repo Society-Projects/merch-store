@@ -1,10 +1,12 @@
 import healthRoutes from '#src/functions/health.routes.js';
+import authRoutes from "#src/functions/auth/auth.routes.js";
 
 import ApiResponse from '#src/classes/ApiResponse.js';
 
 export default async function routes(app, prefix) {
 
     app.use(`${prefix}`, healthRoutes);
+    app.use(`${prefix}/auth`, authRoutes);
 
     app.use(prefix, (req, res) => {
         return res.status(404).json(new ApiResponse(404, 'API endpoint not found'));
