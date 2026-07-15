@@ -1,0 +1,36 @@
+{
+  "name": "merch-store",
+  "version": "1.0.0",
+  "description": "A simple template for College societies to implement or manage their merch orders, payment needs to verified manually",
+  "keywords": [
+    "merch",
+    "tiet",
+    "college"
+  ],
+  "license": "ISC",
+  "author": "ayushs206",
+  "type": "module",
+  "main": "src/index.js",
+  "imports": {
+    "#src/*": "./src/*"
+  },
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "build": "cd client && npm install && npm run build",
+    "deploy": "npm install && npm run build && npm run start"
+  },
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-rate-limit": "^8.5.2",
+    "mongoose": "^9.7.4",
+    "ua-parser-js": "^2.0.10"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
