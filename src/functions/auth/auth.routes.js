@@ -127,7 +127,7 @@ router.route('/callback')
     })
 
 router.route('/me')
-    .get(authenticate, async (req, res) => {
+    .get(authenticate(), async (req, res) => {
         try {
             const user = await User.findById(req.user.id);
             if (!user) {
@@ -140,9 +140,8 @@ router.route('/me')
         }
     });
 
-
 router.route('/logout')
-    .delete(authenticate, async (req, res) => {
+    .delete(authenticate(), async (req, res) => {
         try {
             const sessionToken = req.cookies?.session_token;
             if (!sessionToken) {
@@ -158,6 +157,5 @@ router.route('/logout')
             return res.status(500).json(new ApiResponse(500, 'Internal Server Error', { message: error.message }));
         }
     });
-
 
 export default router;

@@ -4,7 +4,14 @@ import { User } from "#src/models/User.js";
 import chalk from "chalk";
 
 connectDB().then(async () => {
-    const emailInput = process.argv[2];
+    const roleInput = process.argv[2];
+    const emailInput = process.argv[3];
+
+    if (!roleInput || !["EB", "CORE", "MEMBER"].includes(roleInput?.toUpperCase())) {
+        console.error(chalk.redBright("Please provide a valid role as an argument (EB/CORE/MEMBER)."));
+        process.exit(1);
+        return;
+    }
 
     if (!emailInput || !emailInput.includes("@") || !emailInput.endsWith("@thapar.edu")) {
         console.error(chalk.redBright("Please provide a valid Thapar email address as an argument."));
@@ -19,15 +26,10 @@ connectDB().then(async () => {
         return;
     }
 
-    if (user.role === "admin") {
-        user.role = "user";
-        await user.save();
-        console.log(chalk.red(`User with email ${emailInput} has been demoted to user.`));
-    } else {
-        user.role = "admin";
-        await user.save();
-        console.log(chalk.green(`User with email ${emailInput} has been promoted to admin.`));
-    }
+    user.role = roleInput;
+    await user.save();
+    console.log(chalk.greenBright(`Successfully updated role of user ${emailInput} to ${roleInput}.`));
+
     process.exit(0);
 }).catch((err) => {
     console.error(chalk.red("Error connecting to the database:"), err);

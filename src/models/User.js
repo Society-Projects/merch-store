@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema(
         email: { type: String, required: true, unique: true },
         googleAccountIdentifier: { type: String, unique: true },
         avatar: { type: String },
-        role: { type: String, enum: ['user', 'admin'], default: 'user' },
+        role: { type: String, enum: ['EB', 'CORE', 'MEMBER'], default: 'MEMBER' },
     },
     { timestamps: true }
 );
