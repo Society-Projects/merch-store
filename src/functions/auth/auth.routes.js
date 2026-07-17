@@ -16,7 +16,7 @@ router.route('/')
         try {
             const URL = ['https://accounts.google.com/o/oauth2/v2/auth?',
                 `client_id=${process.env.GOOGLE_OAUTH_CLIENT_ID}`,
-                `&redirect_uri=${process.env.FRONTEND_URL}/auth/callback`,
+                `&redirect_uri=${process.env.SERVER_URL}/api/v1/auth/callback`,
                 `&response_type=code`,
                 `&access_type=offline`,
                 `&prompt=consent`,
@@ -57,7 +57,7 @@ router.route('/callback')
                     code: code,
                     client_id: process.env.GOOGLE_OAUTH_CLIENT_ID,
                     client_secret: process.env.GOOGLE_OAUTH_CLIENT_SECRET,
-                    redirect_uri: `${process.env.FRONTEND_URL}/auth/callback`,
+                    redirect_uri: `${process.env.SERVER_URL}/api/v1/auth/callback`,
                     grant_type: 'authorization_code'
                 })
             });
@@ -120,7 +120,8 @@ router.route('/callback')
 
             res.cookie('session_token', sessionToken, cookieOptions);
 
-            return res.status(200).json(new ApiResponse(200, 'User authenticated successfully', { user: new UserObject(user) }));
+            const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+            return res.redirect(clientUrl);
         } catch (error) {
             return res.status(500).json(new ApiResponse(500, 'Internal Server Error', { message: error.message }));
         }

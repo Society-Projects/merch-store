@@ -9,11 +9,11 @@ const router = Router();
 router.route('/')
     .get(listProducts);
 
-router.route('/:id')
-    .get(getProductById);
-
 router.route('/all')
     .get(auth("EB"), listAllProducts);
+
+router.route('/:id')
+    .get(getProductById);
 
 router.route('/create')
     .post(auth("EB"), createProduct);

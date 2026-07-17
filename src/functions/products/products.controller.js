@@ -1,13 +1,47 @@
-import { Product } from "#src/models/Product.js";
+import crypto from "crypto";
 
-import ApiResponse from "#src/utils/ApiResponse.js";
+import { User } from "#src/models/User.js";
+import { Product } from "#src/models/Product.js";
+import { Session } from "#src/models/Session.js";
+
+import UserObject from "#src/classes/UserObject.js";
+import ApiResponse from "#src/classes/ApiResponse.js";
 
 export const listProducts = async (req, res) => {
     try {
         let products = await Product.find({ isVisible: true }).sort({ createdAt: -1 });
 
+        const sessionToken = req.cookies.session_token;
+        if (sessionToken) {
+
+            const tokenHash = crypto
+                .createHash("sha256")
+                .update(sessionToken)
+                .digest("hex");
+
+            const session = await Session.findOne({ hash: tokenHash });
+
+            if (!session || session.expiresAt < new Date()) {
+                if (session) {
+                    await Session.deleteOne({ _id: session._id });
+                }
+
+                res.clearCookie("session_token");
+            }
+            else {
+
+                const user = await User.findById(session.userId);
+
+                if (!user) {
+                    res.clearCookie("session_token");
+                } else {
+                    req.user = new UserObject(user);
+                }
+            }
+        }
+
         if (req.user) {
-            products = products.filter(product => product.positions.some(position => (position.role === req.user.role && position.isVisible)));
+            products = products.filter(product => product.positions.includes(req.user.role));
         }
 
         return res.status(200).json(new ApiResponse(200, 'Products retrieved successfully', { products }));
@@ -20,12 +54,9 @@ export const listAllProducts = async (req, res) => {
     try {
         let products = await Product.find().sort({ createdAt: -1 });
 
-        if (req.user) {
-            products = products.filter(product => product.positions.some(position => (position.role === req.user.role && position.isVisible)));
-        }
-
         return res.status(200).json(new ApiResponse(200, 'Products retrieved successfully', { products }));
     } catch (error) {
+        console.error('Error retrieving all products:', error);
         return res.status(500).json(new ApiResponse(500, 'Internal Server Error', { message: error.message }));
     }
 }

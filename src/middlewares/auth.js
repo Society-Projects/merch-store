@@ -24,7 +24,7 @@ export default function authenticate(requiredRole = "MEMBER") {
                 .update(sessionToken)
                 .digest("hex");
 
-            const session = await Session.findOne({ tokenHash });
+            const session = await Session.findOne({ hash: tokenHash });
 
             if (!session || session.expiresAt < new Date()) {
                 if (session) {
