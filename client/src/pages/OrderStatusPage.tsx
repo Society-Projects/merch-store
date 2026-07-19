@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import {
-  CreditCard, CheckCircle, Package, Clock, MapPin, Check, ArrowLeft, RefreshCw
+  CreditCard, CheckCircle, Package, Clock, MapPin, Check, ArrowLeft, RefreshCw, AlertTriangle
 } from 'lucide-react'
+import { apiRequest } from '../utils/api'
 import Footer from '../components/Footer'
 import Button from '../components/Button'
 
@@ -31,15 +32,69 @@ const STATUS_INDEX: Record<string, number> = {
 
 export default function OrderStatusPage() {
   const { id } = useParams<{ id: string }>()
-  const [currentStatus] = useState('verified')
+  const [order, setOrder] = useState<any | null>(null)
+  const [currentStatus, setCurrentStatus] = useState('pending')
+  const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
+
+  const fetchOrder = async (showRefresh = false) => {
+    if (!id) return
+    if (showRefresh) setRefreshing(true)
+    try {
+      const data = await apiRequest(`/orders/${id}`)
+      if (data && data.order) {
+        setOrder(data.order)
+        setCurrentStatus(data.order.status || 'pending')
+      }
+    } catch (err) {
+      console.error('Failed to fetch order:', err)
+      setOrder(null)
+    } finally {
+      setLoading(false)
+      if (showRefresh) setRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    fetchOrder()
+  }, [id])
 
   const activeIndex = STATUS_INDEX[currentStatus] ?? 0
 
-  const handleRefresh = async () => {
-    setRefreshing(true)
-    await new Promise(r => setTimeout(r, 800))
-    setRefreshing(false)
+  const handleRefresh = () => {
+    fetchOrder(true)
+  }
+
+  if (loading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-1 max-w-2xl mx-auto px-4 sm:px-6 py-28 w-full flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <RefreshCw size={24} className="animate-spin text-accent" />
+            <p className="text-sm text-muted-foreground">Loading order details...</p>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (!order) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-1 max-w-2xl mx-auto px-4 sm:px-6 py-20 w-full flex flex-col items-center justify-center gap-4 text-center">
+          <AlertTriangle size={36} className="text-amber-500" />
+          <h2 className="text-xl font-bold text-foreground">Order Not Found</h2>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            We couldn't retrieve details for order <span className="font-mono font-semibold">{id}</span>. Please verify the ID or check back later.
+          </p>
+          <Link to="/">
+            <Button variant="primary">Back to Store</Button>
+          </Link>
+        </div>
+        <Footer />
+      </div>
+    )
   }
 
   return (

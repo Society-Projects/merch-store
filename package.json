@@ -17,7 +17,7 @@
   "scripts": {
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
-    "build": "cd frontend && npm install && npm run build",
+    "build": "cd client && npm install && npm run build",
     "deploy": "npm install && npm run build && npm run start",
     "admin": "node scripts/admin.js",
     "seed-products": "node scripts/products.js"

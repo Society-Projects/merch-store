@@ -7,38 +7,66 @@ connectDB().then(async () => {
 
     await Product.insertMany([
         {
-            name: "ID card",
-            description: "Description for Product 1",
+            name: "Chapter Hoodie",
+            description: "Premium heavyweight hoodie with the chapter logo embroidered on chest. 80% cotton, 20% polyester fleece — warm, structured, and built for marathon debugging sessions.",
             isVisible: true,
             positions: ["EB", "CORE", "MEMBER"],
-            price: 500,
-            image: "https://res.cloudinary.com/dbl0bzdfi/image/upload/v1783411214/logo_masldr.png",
+            price: 1799,
+            image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=800&fit=crop&auto=format",
+            category: "Apparel",
             userInputs: [
-                {
-                    question: "What you want to write on ur id card",
-                    isRequired: false,
-                    isImageInput: false
-                },
-                {
-                    question: "Upload your image",
-                    isRequired: false,
-                    isImageInput: true
-                }
+                { question: "Select your size (XS/S/M/L/XL/XXL)", isRequired: true, isImageInput: false },
+                { question: "Name for embroidery (optional, max 20 chars)", isRequired: false, isImageInput: false }
             ]
         },
         {
-            name: "Tshirt",
-            description: "Description for Product 2",
+            name: "IEEE Polo Shirt",
+            description: "Clean, professional polo with IEEE logo embroidery on left chest. Moisture-wicking pique fabric keeps you composed during industry visits and presentations.",
             isVisible: true,
             positions: ["EB", "CORE", "MEMBER"],
-            price: 500,
-            image: "https://res.cloudinary.com/dbl0bzdfi/image/upload/v1783411213/banner_lldgct.png",
+            price: 1299,
+            image: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&h=800&fit=crop&auto=format",
+            category: "Apparel",
             userInputs: [
-                {
-                    question: "What you want to write as ur name on ur Tshirt",
-                    isRequired: true,
-                    isImageInput: false
-                }
+                { question: "Select your size (S/M/L/XL)", isRequired: true, isImageInput: false },
+                { question: "Your name for the name tag", isRequired: true, isImageInput: false }
+            ]
+        },
+        {
+            name: "GDSC Ceramic Mug",
+            description: "350ml ceramic mug with GDSC logo. Microwave and dishwasher safe. The only thing that should start your morning besides a standup.",
+            isVisible: true,
+            positions: ["EB", "CORE", "MEMBER"],
+            price: 649,
+            image: "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&h=800&fit=crop&auto=format",
+            category: "Drinkware",
+            userInputs: [
+                { question: "Custom message on mug (max 30 chars, optional)", isRequired: false, isImageInput: false }
+            ]
+        },
+        {
+            name: "OWASP Security Cap",
+            description: "Structured six-panel cap with embroidered OWASP logo. UV-protective fabric, adjustable buckle strap.",
+            isVisible: true,
+            positions: ["EB", "CORE", "MEMBER"],
+            price: 849,
+            image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&h=800&fit=crop&auto=format",
+            category: "Accessories",
+            userInputs: [
+                { question: "Upload your chapter membership ID / proof", isRequired: true, isImageInput: true }
+            ]
+        },
+        {
+            name: "EB Member Blazer",
+            description: "Custom tailored executive blazer, available exclusively for Executive Board (EB) members. Includes golden embroidered emblem.",
+            isVisible: true,
+            positions: ["EB"],
+            price: 2999,
+            image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&h=800&fit=crop&auto=format",
+            category: "Apparel",
+            userInputs: [
+                { question: "Select your chest size (38/40/42/44)", isRequired: true, isImageInput: false },
+                { question: "Upload EB Appointment Letter", isRequired: true, isImageInput: true }
             ]
         }
     ]);

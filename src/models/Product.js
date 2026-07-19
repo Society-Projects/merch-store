@@ -25,6 +25,7 @@ const productSchema = new mongoose.Schema(
 
         price: { type: Number, required: true, default: 100 },
         image: { type: String, required: false },
+        category: { type: String, required: true, default: "Apparel" },
 
         userInputs: { type: [userInputSchema], required: false },
     },

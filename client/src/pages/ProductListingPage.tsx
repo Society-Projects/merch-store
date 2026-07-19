@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { SlidersHorizontal, ChevronDown } from 'lucide-react'
-import { products } from '../data/mockData'
+import { apiRequest } from '../utils/api'
 import ProductGrid from '../components/ProductGrid'
 import SearchBar from '../components/SearchBar'
 import CategoryFilter from '../components/CategoryFilter'
@@ -16,6 +16,7 @@ const SORT_OPTIONS = [
 
 export default function ProductListingPage() {
   const [params, setParams] = useSearchParams()
+  const [productsList, setProductsList] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [sort, setSort] = useState('default')
   const [sortOpen, setSortOpen] = useState(false)
@@ -25,9 +26,18 @@ export default function ProductListingPage() {
 
   useEffect(() => {
     setLoading(true)
-    const t = setTimeout(() => setLoading(false), 600)
-    return () => clearTimeout(t)
-  }, [q, cat])
+    apiRequest('/products')
+      .then(data => {
+        const formatted = (data.products || []).map((p: any) => ({ ...p, id: p._id }))
+        setProductsList(formatted)
+      })
+      .catch(err => {
+        console.error('Failed to fetch products:', err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
+  }, [])
 
   const setSearch = (val: string) => {
     const p = new URLSearchParams(params)
@@ -42,7 +52,7 @@ export default function ProductListingPage() {
   }
 
   const filtered = useMemo(() => {
-    let list = products.filter(p => p.isVisible)
+    let list = productsList.filter(p => p.isVisible)
     if (cat && cat !== 'All') list = list.filter(p => p.category === cat)
     if (q) list = list.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.description.toLowerCase().includes(q.toLowerCase()))
 
@@ -52,7 +62,7 @@ export default function ProductListingPage() {
       case 'name-asc': return [...list].sort((a, b) => a.name.localeCompare(b.name))
       default: return list
     }
-  }, [cat, q, sort])
+  }, [productsList, cat, q, sort])
 
   const clearFilters = () => {
     setParams({})
@@ -97,11 +107,10 @@ export default function ProductListingPage() {
                   <button
                     key={opt.value}
                     onClick={() => { setSort(opt.value); setSortOpen(false) }}
-                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${
-                      sort === opt.value
+                    className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${sort === opt.value
                         ? 'bg-accent text-accent-foreground font-medium'
                         : 'text-foreground hover:bg-secondary'
-                    }`}
+                      }`}
                   >
                     {opt.label}
                   </button>

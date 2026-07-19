@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowRight, Zap, Shield, Package, Star } from 'lucide-react'
-import { products, SOCIETY_CONFIG, formatPrice } from '../data/mockData'
+import { apiRequest } from '../utils/api'
+import { SOCIETY_CONFIG, formatPrice } from '../data/mockData'
 import ProductCard from '../components/ProductCard'
 import Footer from '../components/Footer'
 import { ProductGridSkeleton } from '../components/LoadingSkeleton'
@@ -15,14 +16,25 @@ const features = [
 ]
 
 export default function LandingPage() {
+  const [productsList, setProductsList] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 800)
-    return () => clearTimeout(t)
+    apiRequest('/products')
+      .then(data => {
+        const formatted = (data.products || []).map((p: any) => ({ ...p, id: p._id }))
+        setProductsList(formatted)
+      })
+      .catch(err => {
+        console.error('Failed to fetch products:', err)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [])
 
-  const featured = products.filter(p => p.isVisible).slice(0, 4)
+  const featured = productsList.filter(p => p.isVisible).slice(0, 4)
+
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -88,7 +100,7 @@ export default function LandingPage() {
 
             {/* Product collage */}
             <div className="flex-1 grid grid-cols-2 gap-3 max-w-md w-full">
-              {products.slice(0, 4).map((p, i) => (
+              {productsList.slice(0, 4).map((p, i) => (
                 <Link
                   key={p.id}
                   to={`/products/${p.id}`}

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, ArrowRight, CheckCircle, Smartphone } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
+import { apiRequest } from '../utils/api'
 import { SOCIETY_CONFIG, formatPrice } from '../data/mockData'
 import OrderSummary from '../components/OrderSummary'
 import UploadCard from '../components/UploadCard'
@@ -29,7 +30,7 @@ export default function CheckoutPage() {
   const [details, setDetails] = useState<Details>({ name: '', email: '', phone: '', rollNo: '', college: '', notes: '' })
   const [paymentScreenshot, setPaymentScreenshot] = useState('')
   const [placing, setPlacing] = useState(false)
-  const [orderId] = useState(`ORD-${Date.now().toString().slice(-6)}`)
+  const [createdOrderId, setCreatedOrderId] = useState('')
 
   const totalAmount = totalPrice + HANDLING_FEE
 
@@ -45,11 +46,35 @@ export default function CheckoutPage() {
   const handlePlaceOrder = async () => {
     if (!paymentScreenshot) return
     setPlacing(true)
-    await new Promise(r => setTimeout(r, 1200))
-    clearCart()
-    setStep(3)
-    setPlacing(false)
-    window.scrollTo(0, 0)
+    try {
+      const orderItems = items.map(item => ({
+        product: item.product.id,
+        quantity: item.quantity,
+        selectedPosition: item.selectedPosition,
+        userInputValues: item.userInputValues
+      }))
+      const payload = {
+        items: orderItems,
+        totalPrice: totalAmount,
+        details,
+        paymentScreenshot
+      }
+      const data = await apiRequest('/orders', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      })
+      if (data && data.order) {
+        setCreatedOrderId(data.order.orderId)
+        clearCart()
+        setStep(3)
+      }
+    } catch (err) {
+      console.error(err)
+      alert('Failed to place order: ' + (err as Error).message)
+    } finally {
+      setPlacing(false)
+      window.scrollTo(0, 0)
+    }
   }
 
   const steps = [
@@ -249,12 +274,12 @@ export default function CheckoutPage() {
                 We've received your order and payment proof. You'll get a confirmation soon.
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                Order ID: <span className="font-mono font-semibold text-foreground">{orderId}</span>
+                Order ID: <span className="font-mono font-semibold text-foreground">{createdOrderId}</span>
               </p>
             </div>
 
             <div className="flex flex-col gap-2 w-full max-w-xs mt-2">
-              <Link to={`/orders/${orderId}`}>
+              <Link to={`/orders/${createdOrderId}`}>
                 <Button variant="primary" size="lg" className="w-full">
                   Track Order Status
                   <ArrowRight size={16} />

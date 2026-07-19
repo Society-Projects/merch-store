@@ -20,7 +20,29 @@ export default function UploadCard({
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
-    if (file) onChange(file.name)
+    if (!file) return
+
+    const reader = new FileReader()
+    reader.onloadend = async () => {
+      const base64 = reader.result as string
+      try {
+        const res = await fetch('/api/v1/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ base64, fileName: file.name })
+        })
+        const json = await res.json()
+        if (json.success && json.data?.url) {
+          onChange(json.data.url)
+        } else {
+          alert(json.message || 'Failed to upload image')
+        }
+      } catch (err) {
+        console.error('Upload error:', err)
+        alert('Upload error: ' + (err as Error).message)
+      }
+    }
+    reader.readAsDataURL(file)
   }
 
   return (

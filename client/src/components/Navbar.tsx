@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Menu, X, Shield, LayoutDashboard } from 'lucide-react'
+import { ShoppingCart, Menu, X, Shield, LayoutDashboard, LogIn, LogOut, User } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
+import { useAuth } from '../contexts/AuthContext'
 import { SOCIETY_CONFIG } from '../data/mockData'
 import ThemeToggle from './ThemeToggle'
 import SearchBar from './SearchBar'
 
 export default function Navbar() {
   const { totalItems, openCart } = useCart()
+  const { user, login, logout } = useAuth()
   const [mobileOpen, setMobileOpen] = useState(false)
   const [search, setSearch] = useState('')
   const navigate = useNavigate()
@@ -55,13 +57,15 @@ export default function Navbar() {
 
           {/* Desktop actions */}
           <div className="hidden md:flex items-center gap-2">
-            <Link
-              to="/admin"
-              className="h-9 px-3 flex items-center gap-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200"
-            >
-              <LayoutDashboard size={15} />
-              <span>Admin</span>
-            </Link>
+            {user?.role === 'EB' && (
+              <Link
+                to="/admin"
+                className="h-9 px-3 flex items-center gap-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200"
+              >
+                <LayoutDashboard size={15} />
+                <span>Admin</span>
+              </Link>
+            )}
 
             <ThemeToggle />
 
@@ -77,6 +81,38 @@ export default function Navbar() {
                 </span>
               )}
             </button>
+
+            <div className="h-4 w-px bg-border mx-1" />
+
+            {user ? (
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full bg-secondary/50 border border-border">
+                  {user.avatar ? (
+                    <img src={user.avatar} alt={user.firstName} className="h-6 w-6 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-6 w-6 rounded-full bg-accent flex items-center justify-center text-accent-foreground text-xs font-semibold">
+                      {user.firstName[0]}
+                    </div>
+                  )}
+                  <span className="text-xs font-medium text-foreground max-w-[80px] truncate">{user.firstName}</span>
+                </div>
+                <button
+                  onClick={logout}
+                  className="h-9 w-9 flex items-center justify-center rounded-xl text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all duration-200 cursor-pointer"
+                  title="Logout"
+                >
+                  <LogOut size={15} />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={login}
+                className="h-9 px-4 flex items-center gap-1.5 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-all duration-200 cursor-pointer"
+              >
+                <LogIn size={14} />
+                <span>Login</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile actions */}
@@ -116,18 +152,55 @@ export default function Navbar() {
               <Link
                 to="/products"
                 onClick={() => setMobileOpen(false)}
-                className="h-10 px-3 flex items-center text-sm text-foreground hover:bg-secondary rounded-xl transition-all"
+                className="h-10 px-3 flex items-center text-sm text-foreground hover:bg-secondary rounded-xl transition-all font-medium"
               >
                 All Products
               </Link>
-              <Link
-                to="/admin"
-                onClick={() => setMobileOpen(false)}
-                className="h-10 px-3 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-all"
-              >
-                <LayoutDashboard size={14} />
-                Admin Dashboard
-              </Link>
+              {user?.role === 'EB' && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileOpen(false)}
+                  className="h-10 px-3 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-all font-medium"
+                >
+                  <LayoutDashboard size={14} />
+                  Admin Dashboard
+                </Link>
+              )}
+
+              <div className="h-px bg-border my-2" />
+
+              {user ? (
+                <div className="flex flex-col gap-2 px-3 py-1">
+                  <div className="flex items-center gap-2">
+                    {user.avatar ? (
+                      <img src={user.avatar} alt={user.firstName} className="h-8 w-8 rounded-full object-cover" />
+                    ) : (
+                      <div className="h-8 w-8 rounded-full bg-accent flex items-center justify-center text-accent-foreground text-sm font-semibold">
+                        {user.firstName[0]}
+                      </div>
+                    )}
+                    <div className="flex flex-col">
+                      <p className="text-sm font-semibold text-foreground">{user.firstName} {user.lastName}</p>
+                      <p className="text-xs text-muted-foreground">{user.role}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { logout(); setMobileOpen(false) }}
+                    className="h-10 mt-2 flex items-center justify-center gap-2 border border-border text-red-500 rounded-xl text-sm font-medium hover:bg-red-500/10 transition-all cursor-pointer"
+                  >
+                    <LogOut size={14} />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => { login(); setMobileOpen(false) }}
+                  className="h-10 flex items-center justify-center gap-2 bg-accent text-accent-foreground rounded-xl text-sm font-medium hover:opacity-90 transition-all cursor-pointer"
+                >
+                  <LogIn size={14} />
+                  <span>Login with Google</span>
+                </button>
+              )}
             </nav>
           </div>
         )}

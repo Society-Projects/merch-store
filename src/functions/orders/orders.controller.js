@@ -1,0 +1,134 @@
+import crypto from "crypto";
+import { Order } from "#src/models/Order.js";
+import ApiResponse from "#src/classes/ApiResponse.js";
+
+// Helper to generate a unique human-readable order ID
+const generateOrderId = () => {
+    return `ORD-${Date.now().toString().slice(-6)}-${crypto.randomBytes(2).toString('hex').toUpperCase()}`;
+};
+
+export const createOrder = async (req, res) => {
+    try {
+        const { items, totalPrice, details, paymentScreenshot } = req.body;
+
+        if (!items || !Array.isArray(items) || items.length === 0) {
+            return res.status(400).json(new ApiResponse(400, "Items array is required"));
+        }
+
+        if (!totalPrice || isNaN(totalPrice)) {
+            return res.status(400).json(new ApiResponse(400, "Invalid total price"));
+        }
+
+        if (!details || !details.name || !details.email || !details.phone || !details.rollNo) {
+            return res.status(400).json(new ApiResponse(400, "Incomplete customer details"));
+        }
+
+        if (!paymentScreenshot) {
+            return res.status(400).json(new ApiResponse(400, "Payment proof screenshot is required"));
+        }
+
+        const orderId = generateOrderId();
+        const orderData = {
+            orderId,
+            items,
+            totalPrice,
+            details,
+            paymentScreenshot,
+            status: "pending"
+        };
+
+        if (req.user) {
+            orderData.userId = req.user.id;
+        }
+
+        const order = await Order.create(orderData);
+        return res.status(201).json(new ApiResponse(201, "Order placed successfully", { order }));
+    } catch (error) {
+        console.error("Create order error:", error);
+        return res.status(500).json(new ApiResponse(500, "Internal Server Error", { message: error.message }));
+    }
+};
+
+export const getOrdersMe = async (req, res) => {
+    try {
+        if (!req.user) {
+            return res.status(401).json(new ApiResponse(401, "Unauthorized"));
+        }
+
+        const orders = await Order.find({ userId: req.user.id }).sort({ createdAt: -1 });
+        return res.status(200).json(new ApiResponse(200, "Orders retrieved successfully", { orders }));
+    } catch (error) {
+        console.error("Get personal orders error:", error);
+        return res.status(500).json(new ApiResponse(500, "Internal Server Error", { message: error.message }));
+    }
+};
+
+export const getOrderById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json(new ApiResponse(400, "Order ID is required"));
+        }
+
+        // Try searching by orderId first, then fallback to Mongoose ObjectId
+        let order = await Order.findOne({ orderId: id }).populate('items.product');
+        if (!order && id.match(/^[0-9a-fA-F]{24}$/)) {
+            order = await Order.findById(id).populate('items.product');
+        }
+
+        if (!order) {
+            return res.status(404).json(new ApiResponse(404, "Order not found"));
+        }
+
+        // Allow access to order if it has no userId OR if the user is owner/admin
+        const canAccess = !order.userId || 
+            (req.user && (["EB", "CORE"].includes(req.user.role) || String(order.userId) === String(req.user.id)));
+
+        if (order.userId && !canAccess) {
+            return res.status(403).json(new ApiResponse(403, "Access denied"));
+        }
+
+        return res.status(200).json(new ApiResponse(200, "Order retrieved successfully", { order }));
+    } catch (error) {
+        console.error("Get order details error:", error);
+        return res.status(500).json(new ApiResponse(500, "Internal Server Error", { message: error.message }));
+    }
+};
+
+export const listAllOrders = async (req, res) => {
+    try {
+        const orders = await Order.find().populate('items.product').sort({ createdAt: -1 });
+        return res.status(200).json(new ApiResponse(200, "All orders retrieved successfully", { orders }));
+    } catch (error) {
+        console.error("Admin retrieve orders error:", error);
+        return res.status(500).json(new ApiResponse(500, "Internal Server Error", { message: error.message }));
+    }
+};
+
+export const updateOrderStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { status } = req.body;
+
+        if (!status || !['pending', 'verified', 'packed', 'ready', 'completed'].includes(status)) {
+            return res.status(400).json(new ApiResponse(400, "Invalid status provided"));
+        }
+
+        let order = await Order.findOne({ orderId: id });
+        if (!order && id.match(/^[0-9a-fA-F]{24}$/)) {
+            order = await Order.findById(id);
+        }
+
+        if (!order) {
+            return res.status(404).json(new ApiResponse(404, "Order not found"));
+        }
+
+        order.status = status;
+        await order.save();
+
+        return res.status(200).json(new ApiResponse(200, "Order status updated successfully", { order }));
+    } catch (error) {
+        console.error("Update order status error:", error);
+        return res.status(500).json(new ApiResponse(500, "Internal Server Error", { message: error.message }));
+    }
+};

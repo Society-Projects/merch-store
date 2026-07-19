@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ArrowLeft, Minus, Plus, ShoppingCart, AlertCircle } from 'lucide-react'
-import { products, formatPrice } from '../data/mockData'
+import { apiRequest } from '../utils/api'
+import { formatPrice } from '../data/mockData'
 import { useCart } from '../contexts/CartContext'
 import { useToast } from '../contexts/ToastContext'
 import DynamicInputField from '../components/DynamicInputField'
@@ -16,6 +17,7 @@ export default function ProductDetailPage() {
   const { addItem } = useCart()
   const { toast } = useToast()
 
+  const [product, setProduct] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
   const [qty, setQty] = useState(1)
   const [selectedPosition, setSelectedPosition] = useState('')
@@ -23,12 +25,35 @@ export default function ProductDetailPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
 
-  const product = products.find(p => p.id === id)
-
   useEffect(() => {
-    const t = setTimeout(() => setLoading(false), 600)
-    return () => clearTimeout(t)
+    if (!id) return
+    setLoading(true)
+    apiRequest(`/products/${id}`)
+      .then(data => {
+        if (data && data.product) {
+          const p = data.product
+          const formatted = {
+            ...p,
+            id: p._id,
+            userInputs: (p.userInputs || []).map((input: any, index: number) => ({
+              ...input,
+              id: input.id || `input-${index}`
+            }))
+          }
+          setProduct(formatted)
+        }
+      })
+      .catch(err => {
+        console.error('Failed to fetch product:', err)
+        setProduct(null)
+      })
+      .finally(() => {
+        setLoading(false)
+      })
   }, [id])
+
+  const isRoleBasedPosition = product && product.positions.some((pos: string) => ['EB', 'CORE', 'MEMBER'].includes(pos))
+
 
   const handleInputChange = (fieldId: string, value: string) => {
     setInputValues(prev => ({ ...prev, [fieldId]: value }))
@@ -39,7 +64,7 @@ export default function ProductDetailPage() {
     if (!product) return false
     const newErrors: Record<string, string> = {}
 
-    if (product.positions.length > 0 && !selectedPosition) {
+    if (product.positions.length > 0 && !isRoleBasedPosition && !selectedPosition) {
       newErrors._position = 'Please select a size / position'
     }
 
@@ -60,7 +85,7 @@ export default function ProductDetailPage() {
     addItem({
       product,
       quantity: qty,
-      selectedPosition,
+      selectedPosition: isRoleBasedPosition ? '' : selectedPosition,
       userInputValues: inputValues,
     })
     toast(`${product.name} added to cart!`, 'success')
@@ -126,7 +151,7 @@ export default function ProductDetailPage() {
             <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
 
             {/* Position / Size selector */}
-            {product.positions.length > 0 && (
+            {product.positions.length > 0 && !isRoleBasedPosition && (
               <div className="flex flex-col gap-2">
                 <p className="text-sm font-medium text-foreground">
                   Size / Position <span className="text-red-500">*</span>
