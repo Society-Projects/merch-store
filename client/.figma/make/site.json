@@ -1,0 +1,10 @@
+{
+  "description": "This open-source ecommerce platform enables college societies to effortlessly manage merchandise orders with a sleek, customizable interface.",
+  "robots": {
+    "index": false
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
