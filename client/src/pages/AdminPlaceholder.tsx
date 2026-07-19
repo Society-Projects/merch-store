@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, ArrowLeft, Package, ShoppingCart, Eye, EyeOff, Plus, Check, Clock, ShieldAlert, FileText, Trash2, X, ExternalLink
+  LayoutDashboard, ArrowLeft, Package, ShoppingCart, Eye, EyeOff, Plus, Check, Clock, ShieldAlert, FileText, Trash2, X, ExternalLink, RefreshCw
 } from 'lucide-react'
 import { apiRequest } from '../utils/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -22,6 +22,8 @@ export default function AdminPlaceholder() {
 
   // Product Form State
   const [showProductForm, setShowProductForm] = useState(false)
+  const [imageMode, setImageMode] = useState<'upload' | 'url'>('upload')
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [newProduct, setNewProduct] = useState({
     name: '',
     description: '',
@@ -115,6 +117,43 @@ export default function AdminPlaceholder() {
       ...prev,
       userInputs: prev.userInputs.filter((_, i) => i !== idx)
     }))
+  }
+
+  const handleProductImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    try {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = async () => {
+        try {
+          const base64 = reader.result as string
+          const response = await fetch('/api/v1/upload', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ file: base64 })
+          })
+          const data = await response.json()
+          if (response.ok && data.data) {
+            setNewProduct(prev => ({ ...prev, image: data.data }))
+            toast('Product image uploaded successfully', 'success')
+          } else {
+            throw new Error(data.message || 'Upload failed')
+          }
+        } catch (err) {
+          toast('Upload failed: ' + (err as Error).message, 'error')
+        } finally {
+          setUploadingImage(false)
+        }
+      }
+    } catch (err) {
+      toast('Failed to read image file', 'error')
+      setUploadingImage(false)
+    }
   }
 
   const handleCreateProduct = async (e: React.FormEvent) => {
@@ -350,15 +389,71 @@ export default function AdminPlaceholder() {
                   />
                 </div>
 
-                <div className="flex flex-col gap-1.5">
-                  <label className="text-xs font-medium text-foreground">Image URL</label>
-                  <input
-                    type="url"
-                    placeholder="https://images.unsplash.com/photo-..."
-                    value={newProduct.image}
-                    onChange={e => setNewProduct(prev => ({ ...prev, image: e.target.value }))}
-                    className="h-10 px-3 bg-background border border-border rounded-xl text-sm"
-                  />
+                 <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-semibold text-foreground">Product Image</label>
+                  <div className="flex flex-col gap-2">
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setImageMode('upload')}
+                        className={`flex-1 py-1.5 text-xs rounded-lg border font-medium transition-all ${
+                          imageMode === 'upload' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border hover:bg-secondary/80'
+                        }`}
+                      >
+                        Upload File
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setImageMode('url')}
+                        className={`flex-1 py-1.5 text-xs rounded-lg border font-medium transition-all ${
+                          imageMode === 'url' ? 'bg-primary text-primary-foreground border-primary' : 'bg-secondary text-foreground border-border hover:bg-secondary/80'
+                        }`}
+                      >
+                        Direct URL
+                      </button>
+                    </div>
+
+                    {imageMode === 'url' ? (
+                      <input
+                        type="url"
+                        placeholder="https://images.unsplash.com/photo-..."
+                        value={newProduct.image}
+                        onChange={e => setNewProduct(prev => ({ ...prev, image: e.target.value }))}
+                        className="h-10 px-3 bg-background border border-border rounded-xl text-sm w-full"
+                      />
+                    ) : (
+                      <div className="flex items-center gap-3">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleProductImageUpload}
+                          className="hidden"
+                          id="admin-product-image-file"
+                          disabled={uploadingImage}
+                        />
+                        <label
+                          htmlFor="admin-product-image-file"
+                          className="h-10 px-4 flex items-center justify-center gap-2 border border-dashed border-border rounded-xl text-xs font-semibold hover:border-accent hover:bg-accent/5 transition-all cursor-pointer bg-background flex-1 text-muted-foreground"
+                        >
+                          {uploadingImage ? (
+                            <>
+                              <RefreshCw className="animate-spin text-accent" size={14} />
+                              <span>Uploading...</span>
+                            </>
+                          ) : newProduct.image ? (
+                            <span>Change Image file</span>
+                          ) : (
+                            <span>Choose Image file</span>
+                          )}
+                        </label>
+                        {newProduct.image && (
+                          <div className="h-10 w-10 rounded-lg overflow-hidden border border-border shrink-0">
+                            <img src={newProduct.image} alt="Uploaded preview" className="w-full h-full object-cover" />
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Customisation Questions */}
