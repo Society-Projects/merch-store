@@ -20,15 +20,15 @@ const renderDescription = (desc: string) => {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-muted-foreground leading-relaxed">
+      <p className="text-sm text-muted-foreground leading-relaxed whitespace-pre-wrap">
         {parts.map((part) => {
           if (part.match(urlRegex)) return null
           return part
         })}
       </p>
       {matches && matches.map((url, idx) => (
-        <div key={idx} className="mt-2 rounded-xl overflow-hidden border border-border max-w-md aspect-video bg-muted flex items-center justify-center animate-fade-in">
-          <img src={url} alt="Description illustration" className="w-full h-full object-cover" />
+        <div key={idx} className="mt-2 border border-border rounded-xl bg-muted/20 p-2 max-w-lg flex items-center justify-center animate-fade-in">
+          <img src={url} alt="Description illustration" className="w-full h-auto object-contain rounded-lg max-h-[400px]" />
         </div>
       ))}
     </div>
@@ -148,11 +148,11 @@ export default function ProductDetailPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 xl:gap-16 animate-fade-in">
           {/* Image */}
-          <div className="relative aspect-square rounded-2xl overflow-hidden bg-muted border border-border">
+          <div className="relative rounded-2xl overflow-hidden bg-muted/30 border border-border flex items-center justify-center min-h-[300px] max-h-[500px] p-4">
             <img
               src={product.image}
               alt={product.name}
-              className="w-full h-full object-cover"
+              className="max-w-full max-h-[460px] object-contain rounded-lg shadow-sm"
             />
           </div>
 

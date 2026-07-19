@@ -13,11 +13,11 @@ export default function ProductCard({ product }: ProductCardProps) {
       to={`/products/${product.id}`}
       className="group flex flex-col gap-3 cursor-pointer"
     >
-      <div className="relative aspect-square overflow-hidden rounded-xl bg-muted border border-border">
+      <div className="relative aspect-[3/4] overflow-hidden rounded-xl bg-muted/30 border border-border flex items-center justify-center p-3">
         <img
           src={product.image}
           alt={product.name}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          className="max-w-full max-h-full object-contain rounded-lg transition-transform duration-500 group-hover:scale-105"
           loading="lazy"
         />
 

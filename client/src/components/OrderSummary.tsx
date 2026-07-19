@@ -5,11 +5,9 @@ interface OrderSummaryProps {
   showItems?: boolean
 }
 
-const HANDLING_FEE = 49
-
 export default function OrderSummary({ showItems = true }: OrderSummaryProps) {
   const { items, totalPrice } = useCart()
-  const grandTotal = totalPrice + HANDLING_FEE
+  const grandTotal = totalPrice
 
   return (
     <div className="bg-card border border-border rounded-2xl p-5 flex flex-col gap-4">
@@ -41,10 +39,6 @@ export default function OrderSummary({ showItems = true }: OrderSummaryProps) {
         <div className="flex justify-between text-sm text-muted-foreground">
           <span>Subtotal</span>
           <span>{formatPrice(totalPrice)}</span>
-        </div>
-        <div className="flex justify-between text-sm text-muted-foreground">
-          <span>Handling fee</span>
-          <span>{formatPrice(HANDLING_FEE)}</span>
         </div>
         <div className="flex justify-between font-semibold text-foreground pt-2 border-t border-border">
           <span>Total</span>

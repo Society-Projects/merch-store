@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, ArrowLeft, Package, ShoppingCart, Eye, EyeOff, Plus, Check, Clock, ShieldAlert, FileText, Trash2, X, ExternalLink, RefreshCw
+  LayoutDashboard, ArrowLeft, Package, ShoppingCart, Eye, EyeOff, Plus, Check, Clock, ShieldAlert, FileText, Trash2, X, ExternalLink, RefreshCw, Pencil
 } from 'lucide-react'
 import { apiRequest } from '../utils/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -19,6 +19,7 @@ export default function AdminPlaceholder() {
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
+  const [editingProductId, setEditingProductId] = useState<string | null>(null)
 
   // Product Form State
   const [showProductForm, setShowProductForm] = useState(false)
@@ -148,6 +149,51 @@ export default function AdminPlaceholder() {
     }
   }
 
+  const handleCancelForm = () => {
+    setShowProductForm(false)
+    setEditingProductId(null)
+    setNewProduct({
+      name: '',
+      description: '',
+      price: 150,
+      image: '',
+      positions: ['EB', 'CORE', 'MEMBER'],
+      userInputs: []
+    })
+  }
+
+  const handleEditProduct = (prod: any) => {
+    setEditingProductId(prod.id)
+    setNewProduct({
+      name: prod.name,
+      description: prod.description || '',
+      price: prod.price,
+      image: prod.image || '',
+      positions: prod.positions || ['EB', 'CORE', 'MEMBER'],
+      userInputs: (prod.userInputs || []).map((ui: any) => ({
+        question: ui.question,
+        isRequired: ui.isRequired,
+        isImageInput: ui.isImageInput
+      }))
+    })
+    setShowProductForm(true)
+    setImageMode(prod.image ? 'url' : 'upload')
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const handleDeleteProduct = async (productId: string, productName: string) => {
+    if (!window.confirm(`Are you sure you want to delete product "${productName}"?`)) return
+    try {
+      await apiRequest(`/products/${productId}`, {
+        method: 'DELETE'
+      })
+      toast('Product deleted successfully', 'success')
+      fetchData()
+    } catch (err) {
+      toast('Failed to delete product: ' + (err as Error).message, 'error')
+    }
+  }
+
   const handleCreateProduct = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!newProduct.name || newProduct.price <= 0) {
@@ -156,23 +202,23 @@ export default function AdminPlaceholder() {
     }
 
     try {
-      await apiRequest('/products/create', {
-        method: 'POST',
-        body: JSON.stringify(newProduct)
-      })
-      toast('Product created successfully', 'success')
-      setShowProductForm(false)
-      setNewProduct({
-        name: '',
-        description: '',
-        price: 150,
-        image: '',
-        positions: ['EB', 'CORE', 'MEMBER'],
-        userInputs: []
-      })
+      if (editingProductId) {
+        await apiRequest(`/products/${editingProductId}`, {
+          method: 'PUT',
+          body: JSON.stringify(newProduct)
+        })
+        toast('Product updated successfully', 'success')
+      } else {
+        await apiRequest('/products/create', {
+          method: 'POST',
+          body: JSON.stringify(newProduct)
+        })
+        toast('Product created successfully', 'success')
+      }
+      handleCancelForm()
       fetchData()
     } catch (err) {
-      toast('Failed to create product: ' + (err as Error).message, 'error')
+      toast('Failed to save product: ' + (err as Error).message, 'error')
     }
   }
 
@@ -334,7 +380,7 @@ export default function AdminPlaceholder() {
                 <h3 className="font-bold text-foreground">Product Inventory</h3>
                 <p className="text-xs text-muted-foreground">Manage details and create new product listings</p>
               </div>
-              <Button onClick={() => setShowProductForm(!showProductForm)}>
+              <Button onClick={() => { if (showProductForm) { handleCancelForm() } else { setShowProductForm(true) } }}>
                 <Plus size={16} />
                 {showProductForm ? 'Cancel' : 'Create Product'}
               </Button>
@@ -343,7 +389,7 @@ export default function AdminPlaceholder() {
             {/* Create Product Form */}
             {showProductForm && (
               <form onSubmit={handleCreateProduct} className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-4 animate-fade-in">
-                <h3 className="font-bold text-foreground border-b border-border pb-2">Add New Product</h3>
+                <h3 className="font-bold text-foreground border-b border-border pb-2">{editingProductId ? 'Edit Product' : 'Add New Product'}</h3>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1.5">
@@ -506,7 +552,7 @@ export default function AdminPlaceholder() {
                 </div>
 
                 <Button type="submit" variant="primary" className="self-end mt-2">
-                  Create Listing
+                  {editingProductId ? 'Update Listing' : 'Create Listing'}
                 </Button>
               </form>
             )}
@@ -516,11 +562,16 @@ export default function AdminPlaceholder() {
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                 {products.map(prod => (
                   <div key={prod.id} className="border border-border/60 rounded-xl overflow-hidden bg-background flex flex-col gap-3 p-3">
-                    <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+                     <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
                       {prod.image ? (
                         <img src={prod.image} alt={prod.name} className="w-full h-full object-cover" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No image available</div>
+                      )}
+                      {prod.positions && prod.positions.length > 0 && (
+                        <span className="absolute top-2 left-2 bg-card/90 backdrop-blur-sm text-foreground text-[9px] px-2 py-0.5 rounded-full border border-border font-mono">
+                          {prod.positions.join(', ')}
+                        </span>
                       )}
                     </div>
 
@@ -528,9 +579,7 @@ export default function AdminPlaceholder() {
                       <h4 className="font-semibold text-foreground text-sm truncate">{prod.name}</h4>
                       <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">{prod.description || 'No description provided.'}</p>
                       <p className="text-sm font-bold text-foreground mt-1">{formatPrice(prod.price)}</p>
-                    </div>
-
-                    <div className="flex justify-between items-center border-t border-border pt-3">
+                    </div>                     <div className="flex justify-between items-center border-t border-border pt-3">
                       <div className="flex items-center gap-2">
                         <button
                           onClick={() => handleToggleVisibility(prod.id, prod.isVisible)}
@@ -546,8 +595,23 @@ export default function AdminPlaceholder() {
                         </span>
                       </div>
 
-                      <div className="flex gap-1 text-[10px] text-muted-foreground font-mono">
-                        {prod.positions?.join(', ')}
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleEditProduct(prod)}
+                          className="h-8 w-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all cursor-pointer"
+                          title="Edit Product"
+                        >
+                          <Pencil size={13} />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteProduct(prod.id, prod.name)}
+                          className="h-8 w-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer"
+                          title="Delete Product"
+                        >
+                          <Trash2 size={13} />
+                        </button>
                       </div>
                     </div>
                   </div>
@@ -615,7 +679,7 @@ export default function AdminPlaceholder() {
                           <div>
                             <p className="text-sm font-semibold text-foreground">{item.product?.name || 'Unknown Product'}</p>
                             {item.selectedPosition && (
-                              <p className="text-xs text-muted-foreground mt-0.5">Size/Position: {item.selectedPosition}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">Position: {item.selectedPosition}</p>
                             )}
                           </div>
                           <div className="text-right">

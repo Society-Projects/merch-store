@@ -233,7 +233,7 @@ export const deleteProduct = async (req, res) => {
             return res.status(404).json(new ApiResponse(404, 'Product not found', {}));
         }
 
-        await product.remove();
+        await Product.deleteOne({ _id: product._id });
 
         return res.status(200).json(new ApiResponse(200, 'Product deleted successfully', {}));
     } catch (error) {

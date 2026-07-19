@@ -13,8 +13,6 @@ import { useAuth } from '../contexts/AuthContext'
 
 type Step = 1 | 2
 
-const HANDLING_FEE = 49
-
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart()
   const navigate = useNavigate()
@@ -24,7 +22,7 @@ export default function CheckoutPage() {
   const [placing, setPlacing] = useState(false)
   const [createdOrderId, setCreatedOrderId] = useState('')
 
-  const totalAmount = totalPrice + HANDLING_FEE
+  const totalAmount = totalPrice
 
   const handlePlaceOrder = async () => {
     if (!paymentScreenshot) return
@@ -33,7 +31,7 @@ export default function CheckoutPage() {
       const orderItems = items.map(item => ({
         product: item.product.id,
         quantity: item.quantity,
-        selectedPosition: item.selectedPosition,
+        selectedPosition: item.product.positions && item.product.positions.length > 0 ? (user?.role || 'MEMBER') : '',
         userInputValues: item.userInputValues
       }))
       const payload = {

@@ -4,7 +4,7 @@ const orderItemSchema = new mongoose.Schema({
     product: { type: mongoose.Schema.Types.ObjectId, ref: 'Product', required: true },
     quantity: { type: Number, required: true, default: 1 },
     selectedPosition: { type: String, required: false },
-    userInputValues: { type: Map, of: String, required: false }
+    userInputValues: { type: mongoose.Schema.Types.Mixed, required: false }
 }, { _id: false });
 
 const orderSchema = new mongoose.Schema({

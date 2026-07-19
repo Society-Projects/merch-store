@@ -51,7 +51,7 @@ export default function CartPage() {
                           <p className="font-semibold text-foreground text-sm hover:text-accent transition-colors">{item.product.name}</p>
                         </Link>
                         {item.selectedPosition && (
-                          <p className="text-xs text-muted-foreground">Role: {item.selectedPosition}</p>
+                          <p className="text-xs text-muted-foreground">Position: {item.selectedPosition}</p>
                         )}
                       </div>
                       <button
