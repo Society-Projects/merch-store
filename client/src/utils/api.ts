@@ -8,7 +8,7 @@ export async function apiRequest<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = endpoint.startsWith('http') ? endpoint : `/api/v1${endpoint.startsWith('/') ? '' : '/'}${endpoint}`
+  const url = endpoint.startsWith('http') ? endpoint : `${import.meta.env.VITE_BACKEND_URL}/api/v1${endpoint.startsWith('/') ? '' : '/'}${endpoint}`
 
   const headers = new Headers(options.headers || {})
   if (!(options.body instanceof FormData) && !headers.has('Content-Type') && options.body) {
