@@ -60,7 +60,7 @@ export default function CartDrawer() {
                       </button>
                     </div>
                     {item.selectedPosition && (
-                      <p className="text-xs text-muted-foreground">Size: {item.selectedPosition}</p>
+                      <p className="text-xs text-muted-foreground">Role: {item.selectedPosition}</p>
                     )}
                     <div className="flex items-center justify-between mt-1">
                       <div className="flex items-center gap-1 border border-border rounded-lg overflow-hidden">

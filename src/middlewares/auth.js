@@ -6,6 +6,12 @@ import UserObject from "#src/classes/UserObject.js";
 import { User } from "#src/models/User.js";
 import { Session } from "#src/models/Session.js";
 
+const ROLE_LEVELS = {
+    MEMBER: 0,
+    CORE: 1,
+    EB: 2,
+};
+
 export default function authenticate(requiredRole = "MEMBER") {
     return async (req, res, next) => {
         try {
@@ -53,8 +59,8 @@ export default function authenticate(requiredRole = "MEMBER") {
             }
 
             if (
-                requiredRole !== "MEMBER" &&
-                user.role !== requiredRole
+                (ROLE_LEVELS[user.role] ?? -1) <
+                (ROLE_LEVELS[requiredRole] ?? Infinity)
             ) {
                 return res.status(403).json(
                     new ApiResponse(403, "Forbidden", {

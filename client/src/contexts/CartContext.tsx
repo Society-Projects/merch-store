@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, type ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect, type ReactNode } from 'react'
 import type { Product } from '../data/mockData'
 
 export interface CartItem {
@@ -25,8 +25,20 @@ interface CartContextType {
 const CartContext = createContext<CartContextType>({} as CartContextType)
 
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([])
+  const [items, setItems] = useState<CartItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('cart_items')
+      return saved ? JSON.parse(saved) : []
+    } catch (e) {
+      console.error('Failed to parse cart items from localStorage:', e)
+      return []
+    }
+  })
   const [isOpen, setIsOpen] = useState(false)
+
+  useEffect(() => {
+    localStorage.setItem('cart_items', JSON.stringify(items))
+  }, [items])
 
   const addItem = (item: Omit<CartItem, 'cartId'>) => {
     const cartId = `${item.product.id}-${Date.now()}`
