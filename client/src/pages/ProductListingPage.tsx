@@ -4,7 +4,7 @@ import { SlidersHorizontal, ChevronDown } from 'lucide-react'
 import { apiRequest } from '../utils/api'
 import ProductGrid from '../components/ProductGrid'
 import SearchBar from '../components/SearchBar'
-import CategoryFilter from '../components/CategoryFilter'
+// import CategoryFilter from '../components/CategoryFilter'
 import Footer from '../components/Footer'
 
 const SORT_OPTIONS = [
@@ -22,7 +22,7 @@ export default function ProductListingPage() {
   const [sortOpen, setSortOpen] = useState(false)
 
   const q = params.get('q') || ''
-  const cat = params.get('cat') || 'All'
+  // const cat = params.get('cat') || 'All'
 
   useEffect(() => {
     setLoading(true)
@@ -45,15 +45,15 @@ export default function ProductListingPage() {
     setParams(p)
   }
 
-  const setCategory = (c: string) => {
-    const p = new URLSearchParams(params)
-    if (c === 'All') p.delete('cat'); else p.set('cat', c)
-    setParams(p)
-  }
+  // const setCategory = (c: string) => {
+  //   const p = new URLSearchParams(params)
+  //   if (c === 'All') p.delete('cat'); else p.set('cat', c)
+  //   setParams(p)
+  // }
 
   const filtered = useMemo(() => {
     let list = productsList.filter(p => p.isVisible)
-    if (cat && cat !== 'All') list = list.filter(p => p.category === cat)
+    // if (cat && cat !== 'All') list = list.filter(p => p.category === cat)
     if (q) list = list.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.description.toLowerCase().includes(q.toLowerCase()))
 
     switch (sort) {
@@ -62,7 +62,8 @@ export default function ProductListingPage() {
       case 'name-asc': return [...list].sort((a, b) => a.name.localeCompare(b.name))
       default: return list
     }
-  }, [productsList, cat, q, sort])
+  }, [productsList, q, sort])
+  // }, [productsList, cat, q, sort])
 
   const clearFilters = () => {
     setParams({})
@@ -76,10 +77,10 @@ export default function ProductListingPage() {
         <div className="flex flex-col gap-2 mb-8">
           <p className="text-xs font-semibold text-accent uppercase tracking-widest">Catalogue</p>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">All Products</h1>
-          <p className="text-sm text-muted-foreground">
+          {/* <p className="text-sm text-muted-foreground">
             {filtered.length} {filtered.length === 1 ? 'item' : 'items'}{cat !== 'All' ? ` in ${cat}` : ''}
             {q ? ` matching "${q}"` : ''}
-          </p>
+          </p> */}
         </div>
 
         {/* Filters toolbar */}
@@ -108,8 +109,8 @@ export default function ProductListingPage() {
                     key={opt.value}
                     onClick={() => { setSort(opt.value); setSortOpen(false) }}
                     className={`w-full text-left px-4 py-2.5 text-sm transition-colors cursor-pointer ${sort === opt.value
-                        ? 'bg-accent text-accent-foreground font-medium'
-                        : 'text-foreground hover:bg-secondary'
+                      ? 'bg-accent text-accent-foreground font-medium'
+                      : 'text-foreground hover:bg-secondary'
                       }`}
                   >
                     {opt.label}
@@ -120,8 +121,8 @@ export default function ProductListingPage() {
           </div>
         </div>
 
-        {/* Category filter */}
-        <CategoryFilter selected={cat} onChange={setCategory} className="mb-8" />
+        {/* Category filter
+        <CategoryFilter selected={cat} onChange={setCategory} className="mb-8" /> */}
 
         {/* Product grid */}
         <ProductGrid products={filtered} loading={loading} onClearFilters={clearFilters} />

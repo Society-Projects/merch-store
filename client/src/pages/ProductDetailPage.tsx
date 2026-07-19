@@ -54,7 +54,6 @@ export default function ProductDetailPage() {
 
   const isRoleBasedPosition = product && product.positions.some((pos: string) => ['EB', 'CORE', 'MEMBER'].includes(pos))
 
-
   const handleInputChange = (fieldId: string, value: string) => {
     setInputValues(prev => ({ ...prev, [fieldId]: value }))
     setErrors(prev => ({ ...prev, [fieldId]: '' }))
@@ -161,11 +160,10 @@ export default function ProductDetailPage() {
                     <button
                       key={pos}
                       onClick={() => { setSelectedPosition(pos); setErrors(e => ({ ...e, _position: '' })) }}
-                      className={`h-9 px-4 rounded-xl text-sm font-medium border transition-all duration-200 cursor-pointer ${
-                        selectedPosition === pos
-                          ? 'border-accent bg-accent text-accent-foreground'
-                          : 'border-border text-foreground hover:border-accent hover:bg-accent/5'
-                      }`}
+                      className={`h-9 px-4 rounded-xl text-sm font-medium border transition-all duration-200 cursor-pointer ${selectedPosition === pos
+                        ? 'border-accent bg-accent text-accent-foreground'
+                        : 'border-border text-foreground hover:border-accent hover:bg-accent/5'
+                        }`}
                     >
                       {pos}
                     </button>

@@ -38,8 +38,8 @@ app.use(rateLimit({
     message: 'Too many requests from this IP, please try again later.'
 }));
 
-// Serve local public uploads
-app.use('/public', express.static(path.join(process.cwd(), 'public')));
+// // Serve local public uploads
+// app.use('/public', express.static(path.join(process.cwd(), 'public')));
 
 // Serve frontend static build files
 app.use(express.static(path.join(process.cwd(), 'client/dist')));
@@ -49,7 +49,7 @@ const prefix = process.env.API_PREFIX || '/api/v1';
 routes(app, prefix);
 
 // Wildcard route to serve the React SPA index.html
-// app.get('*', (req, res, next) => {
+// app.get((req, res, next) => {
 //     if (req.path.startsWith(prefix)) {
 //         return next();
 //     }

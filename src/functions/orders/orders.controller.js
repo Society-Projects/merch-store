@@ -80,11 +80,9 @@ export const getOrderById = async (req, res) => {
             return res.status(404).json(new ApiResponse(404, "Order not found"));
         }
 
-        // Allow access to order if it has no userId OR if the user is owner/admin
-        const canAccess = !order.userId || 
-            (req.user && (["EB", "CORE"].includes(req.user.role) || String(order.userId) === String(req.user.id)));
+        const canAccess = (req.user && (["EB", "CORE"].includes(req.user.role) || String(order.userId) === String(req.user.id)));
 
-        if (order.userId && !canAccess) {
+        if (!canAccess) {
             return res.status(403).json(new ApiResponse(403, "Access denied"));
         }
 
@@ -110,7 +108,7 @@ export const updateOrderStatus = async (req, res) => {
         const { id } = req.params;
         const { status } = req.body;
 
-        if (!status || !['pending', 'verified', 'packed', 'ready', 'completed'].includes(status)) {
+        if (!status || !['pending', 'verified', 'ready', 'delivered', 'cancelled'].includes(status)) {
             return res.status(400).json(new ApiResponse(400, "Invalid status provided"));
         }
 

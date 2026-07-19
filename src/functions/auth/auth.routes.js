@@ -120,7 +120,7 @@ router.route('/callback')
 
             res.cookie('session_token', sessionToken, cookieOptions);
 
-            const clientUrl = process.env.CLIENT_URL || 'http://localhost:3000';
+            const clientUrl = process.env.CLIENT_URL || 'http://localhost:5173';
             return res.redirect(clientUrl);
         } catch (error) {
             return res.status(500).json(new ApiResponse(500, 'Internal Server Error', { message: error.message }));
