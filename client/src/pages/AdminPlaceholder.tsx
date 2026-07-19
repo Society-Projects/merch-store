@@ -31,11 +31,20 @@ export default function AdminPlaceholder() {
     price: 150,
     image: '',
     positions: ['EB', 'CORE', 'MEMBER'],
-    userInputs: [] as { question: string; isRequired: boolean; isImageInput: boolean }[]
+    userInputs: [] as {
+      question: string;
+      isRequired: boolean;
+      isImageInput: boolean;
+      isText: boolean;
+      isImage: boolean;
+      isMenu: boolean;
+      menuOptions: string[];
+    }[]
   })
   const [customQuestion, setCustomQuestion] = useState('')
   const [customRequired, setCustomRequired] = useState(false)
-  const [customIsImage, setCustomIsImage] = useState(false)
+  const [customInputType, setCustomInputType] = useState<'text' | 'image' | 'menu'>('text')
+  const [customMenuOptions, setCustomMenuOptions] = useState('')
 
   const fetchData = async () => {
     setLoading(true)
@@ -104,13 +113,31 @@ export default function AdminPlaceholder() {
 
   const handleAddInput = () => {
     if (!customQuestion.trim()) return
+    const options = customInputType === 'menu'
+      ? customMenuOptions.split(',').map(o => o.trim()).filter(Boolean)
+      : []
+
+    if (customInputType === 'menu' && options.length === 0) {
+      toast('Please enter at least one menu option', 'error')
+      return
+    }
+
     setNewProduct(prev => ({
       ...prev,
-      userInputs: [...prev.userInputs, { question: customQuestion, isRequired: customRequired, isImageInput: customIsImage }]
+      userInputs: [...prev.userInputs, {
+        question: customQuestion,
+        isRequired: customRequired,
+        isImageInput: customInputType === 'image',
+        isText: customInputType === 'text',
+        isImage: customInputType === 'image',
+        isMenu: customInputType === 'menu',
+        menuOptions: options
+      }]
     }))
     setCustomQuestion('')
     setCustomRequired(false)
-    setCustomIsImage(false)
+    setCustomInputType('text')
+    setCustomMenuOptions('')
   }
 
   const handleRemoveInput = (idx: number) => {
@@ -173,7 +200,11 @@ export default function AdminPlaceholder() {
       userInputs: (prod.userInputs || []).map((ui: any) => ({
         question: ui.question,
         isRequired: ui.isRequired,
-        isImageInput: ui.isImageInput
+        isImageInput: ui.isImageInput || ui.isImage || false,
+        isText: ui.isText !== undefined ? ui.isText : (!ui.isImage && !ui.isMenu && !ui.isImageInput),
+        isImage: ui.isImage !== undefined ? ui.isImage : (ui.isImageInput || false),
+        isMenu: ui.isMenu || false,
+        menuOptions: ui.menuOptions || []
       }))
     })
     setShowProductForm(true)
@@ -463,7 +494,7 @@ export default function AdminPlaceholder() {
                       <div className="flex items-center gap-3">
                         <input
                           type="file"
-                          accept="image/*"
+                          accept="image/png, image/jpeg, image/jpg"
                           onChange={handleProductImageUpload}
                           className="hidden"
                           id="admin-product-image-file"
@@ -501,11 +532,16 @@ export default function AdminPlaceholder() {
                     <div className="flex flex-wrap gap-2">
                       {newProduct.userInputs.map((input, idx) => (
                         <div key={idx} className="flex items-center gap-1.5 px-3 py-1 bg-secondary text-foreground text-xs rounded-full border border-border">
-                          <span>{input.question} {input.isRequired ? '*' : ''} ({input.isImageInput ? 'File' : 'Text'})</span>
+                          <span>
+                            {input.question} {input.isRequired ? '*' : ''} ({
+                              input.isMenu ? `Menu: ${input.menuOptions?.join(', ')}` :
+                              input.isImage || input.isImageInput ? 'File' : 'Text'
+                            })
+                          </span>
                           <button
                             type="button"
                             onClick={() => handleRemoveInput(idx)}
-                            className="text-muted-foreground hover:text-red-500 font-semibold"
+                            className="text-muted-foreground hover:text-red-500 font-semibold animate-fade-in"
                           >
                             ×
                           </button>
@@ -514,40 +550,63 @@ export default function AdminPlaceholder() {
                     </div>
                   )}
 
-                  <div className="flex flex-col sm:flex-row items-end gap-3 p-3 bg-secondary/30 rounded-xl border border-border/80">
-                    <div className="flex-1 flex flex-col gap-1.5">
-                      <label className="text-[10px] font-medium text-muted-foreground">Add Custom Option (e.g. Size, Custom Name)</label>
-                      <input
-                        type="text"
-                        placeholder="e.g. Select Size (S/M/L) or Upload Member ID"
-                        value={customQuestion}
-                        onChange={e => setCustomQuestion(e.target.value)}
-                        className="h-9 px-3 bg-background border border-border rounded-lg text-xs"
-                      />
-                    </div>
-                    <div className="flex items-center gap-4 h-9">
-                      <label className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer">
+                  <div className="flex flex-col gap-3 p-3 bg-secondary/30 rounded-xl border border-border/80">
+                    <div className="flex flex-col sm:flex-row items-end gap-3 w-full">
+                      <div className="flex-1 flex flex-col gap-1.5 w-full">
+                        <label className="text-[10px] font-medium text-muted-foreground">Add Custom Option (e.g. Size, Custom Name)</label>
                         <input
-                          type="checkbox"
-                          checked={customRequired}
-                          onChange={e => setCustomRequired(e.target.checked)}
-                          className="rounded border-border"
+                          type="text"
+                          placeholder="e.g. Select Size or Upload Member ID"
+                          value={customQuestion}
+                          onChange={e => setCustomQuestion(e.target.value)}
+                          className="h-9 px-3 bg-background border border-border rounded-lg text-xs w-full"
                         />
-                        <span>Required</span>
-                      </label>
-                      <label className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={customIsImage}
-                          onChange={e => setCustomIsImage(e.target.checked)}
-                          className="rounded border-border"
-                        />
-                        <span>File Input</span>
-                      </label>
+                      </div>
+                      
+                      <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-start sm:items-end">
+                        <div className="flex flex-col gap-1 w-full sm:w-40">
+                          <label className="text-[10px] font-medium text-muted-foreground">Input Type</label>
+                          <select
+                            value={customInputType}
+                            onChange={e => setCustomInputType(e.target.value as any)}
+                            className="h-9 px-2 bg-background border border-border rounded-lg text-xs cursor-pointer focus:outline-none"
+                          >
+                            <option value="text">Text Input</option>
+                            <option value="image">File (Image)</option>
+                            <option value="menu">Dropdown (Menu)</option>
+                          </select>
+                        </div>
+
+                        {customInputType === 'menu' && (
+                          <div className="flex flex-col gap-1.5 w-full sm:w-48">
+                            <label className="text-[10px] font-medium text-muted-foreground">Menu Options (comma-separated)</label>
+                            <input
+                              type="text"
+                              placeholder="e.g. XS, S, M, L, XL"
+                              value={customMenuOptions}
+                              onChange={e => setCustomMenuOptions(e.target.value)}
+                              className="h-9 px-3 bg-background border border-border rounded-lg text-xs w-full animate-fade-in"
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4 h-9 min-w-fit px-1">
+                          <label className="flex items-center gap-1.5 text-xs text-foreground cursor-pointer select-none">
+                            <input
+                              type="checkbox"
+                              checked={customRequired}
+                              onChange={e => setCustomRequired(e.target.checked)}
+                              className="rounded border-border"
+                            />
+                            <span>Required</span>
+                          </label>
+                        </div>
+
+                        <Button type="button" size="sm" variant="outline" onClick={handleAddInput}>
+                          Add Option
+                        </Button>
+                      </div>
                     </div>
-                    <Button type="button" size="sm" variant="outline" onClick={handleAddInput}>
-                      Add Question
-                    </Button>
                   </div>
                 </div>
 

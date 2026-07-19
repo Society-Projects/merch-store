@@ -25,8 +25,8 @@ export default function UploadCard({
   label,
   value,
   onChange,
-  accept = 'image/*',
-  hint = 'PNG, JPG up to 10MB',
+  accept = 'image/png, image/jpeg, image/jpg',
+  hint = 'PNG, JPG, JPEG up to 10MB',
 }: UploadCardProps) {
   const ref = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)

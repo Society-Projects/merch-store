@@ -1,7 +1,11 @@
 export interface UserInput {
   id: string
   question: string
-  isImageInput: boolean
+  isImageInput?: boolean
+  isText?: boolean
+  isImage?: boolean
+  isMenu?: boolean
+  menuOptions?: string[]
   isRequired: boolean
 }
 
@@ -34,8 +38,8 @@ export const products: Product[] = [
     isVisible: true,
     positions: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     userInputs: [
-      { id: 'size', question: 'Select your size', isImageInput: false, isRequired: true },
-      { id: 'name-emb', question: 'Name for embroidery (optional, max 20 chars)', isImageInput: false, isRequired: false },
+      { id: 'size', question: 'Select your size', isText: false, isImage: false, isMenu: true, menuOptions: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], isRequired: true },
+      { id: 'name-emb', question: 'Name for embroidery (optional, max 20 chars)', isText: true, isImage: false, isMenu: false, isRequired: false },
     ],
   },
   {
@@ -48,8 +52,8 @@ export const products: Product[] = [
     isVisible: true,
     positions: ['S', 'M', 'L', 'XL'],
     userInputs: [
-      { id: 'size', question: 'Select your size', isImageInput: false, isRequired: true },
-      { id: 'name-tag', question: 'Your name for the name tag', isImageInput: false, isRequired: true },
+      { id: 'size', question: 'Select your size', isText: false, isImage: false, isMenu: true, menuOptions: ['S', 'M', 'L', 'XL'], isRequired: true },
+      { id: 'name-tag', question: 'Your name for the name tag', isText: true, isImage: false, isMenu: false, isRequired: true },
     ],
   },
   {
@@ -62,7 +66,7 @@ export const products: Product[] = [
     isVisible: true,
     positions: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
     userInputs: [
-      { id: 'size', question: 'Select your size', isImageInput: false, isRequired: true },
+      { id: 'size', question: 'Select your size', isText: false, isImage: false, isMenu: true, menuOptions: ['XS', 'S', 'M', 'L', 'XL', 'XXL'], isRequired: true },
     ],
   },
   {
@@ -75,7 +79,7 @@ export const products: Product[] = [
     isVisible: true,
     positions: [],
     userInputs: [
-      { id: 'custom-msg', question: 'Custom message on mug (max 30 chars, optional)', isImageInput: false, isRequired: false },
+      { id: 'custom-msg', question: 'Custom message on mug (max 30 chars, optional)', isText: true, isImage: false, isMenu: false, isRequired: false },
     ],
   },
   {
@@ -88,7 +92,7 @@ export const products: Product[] = [
     isVisible: true,
     positions: ['One Size'],
     userInputs: [
-      { id: 'member-proof', question: 'Upload your chapter membership ID / proof', isImageInput: true, isRequired: true },
+      { id: 'member-proof', question: 'Upload your chapter membership ID / proof', isText: false, isImage: true, isMenu: false, isRequired: true },
     ],
   },
   {

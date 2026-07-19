@@ -3,7 +3,11 @@ import mongoose from 'mongoose';
 const userInputSchema = new mongoose.Schema(
     {
         question: { type: String, required: true },
-        isImageInput: { type: Boolean, required: true, default: false },
+        isImageInput: { type: Boolean, required: false },
+        isText: { type: Boolean, required: true, default: true },
+        isImage: { type: Boolean, required: true, default: false },
+        isMenu: { type: Boolean, required: true, default: false },
+        menuOptions: { type: [String], required: false, default: [] },
         isRequired: { type: Boolean, required: true, default: false },
     },
     { _id: false }

@@ -24,6 +24,10 @@ export default function DynamicInputField({ input, value, onChange }: DynamicInp
   const fileRef = useRef<HTMLInputElement>(null)
   const [uploading, setUploading] = useState(false)
 
+  const isImage = input.isImage || input.isImageInput
+  const isMenu = input.isMenu
+  const isText = input.isText || (!isImage && !isMenu)
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
@@ -61,9 +65,27 @@ export default function DynamicInputField({ input, value, onChange }: DynamicInp
         {input.isRequired && <span className="text-red-500">*</span>}
       </label>
 
-      {input.isImageInput ? (
+      {isMenu ? (
+        <select
+          value={value}
+          onChange={e => onChange(input.id, e.target.value)}
+          className="h-10 px-3 bg-background border border-border rounded-xl text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all cursor-pointer w-full"
+        >
+          <option value="">Select {input.question.toLowerCase()}…</option>
+          {(input.menuOptions || []).map((opt) => (
+            <option key={opt} value={opt}>{opt}</option>
+          ))}
+        </select>
+      ) : isImage ? (
         <div>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} disabled={uploading} />
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/png, image/jpeg, image/jpg"
+            className="hidden"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
           {uploading ? (
             <div className="w-full border-2 border-dashed border-muted rounded-xl p-5 flex flex-col items-center gap-2 text-muted-foreground bg-muted/5">
               <RefreshCw size={20} className="animate-spin text-accent" />
@@ -73,9 +95,8 @@ export default function DynamicInputField({ input, value, onChange }: DynamicInp
             <button
               type="button"
               onClick={() => fileRef.current?.click()}
-              className={`w-full border-2 border-dashed rounded-xl p-5 flex flex-col items-center gap-2 transition-all duration-200 cursor-pointer hover:border-accent hover:bg-accent/5 ${
-                value ? 'border-accent bg-accent/5' : 'border-border'
-              }`}
+              className={`w-full border-2 border-dashed rounded-xl p-5 flex flex-col items-center gap-2 transition-all duration-200 cursor-pointer hover:border-accent hover:bg-accent/5 ${value ? 'border-accent bg-accent/5' : 'border-border'
+                }`}
             >
               {value ? (
                 <>
@@ -87,7 +108,7 @@ export default function DynamicInputField({ input, value, onChange }: DynamicInp
                 <>
                   <Upload size={20} className="text-muted-foreground" />
                   <p className="text-sm text-muted-foreground">Click to upload image</p>
-                  <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG, JPEG up to 10MB</p>
                 </>
               )}
             </button>

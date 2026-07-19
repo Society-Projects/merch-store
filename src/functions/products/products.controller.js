@@ -110,19 +110,50 @@ export const createProduct = async (req, res) => {
             return res.status(400).json(new ApiResponse(400, 'User inputs must be an array', {}));
         }
 
-        if (userInputs.length > 0) {
+        const normalizedInputs = [];
+        if (userInputs && userInputs.length > 0) {
             for (const input of userInputs) {
                 if (!input.question || input.question.trim() === '') {
                     return res.status(400).json(new ApiResponse(400, 'User input question is required', {}));
                 }
 
-                if (typeof input.isImageInput !== 'boolean') {
+                if (input.isImageInput !== undefined && typeof input.isImageInput !== 'boolean') {
                     return res.status(400).json(new ApiResponse(400, 'User input isImageInput must be a boolean', {}));
+                }
+
+                if (input.isText !== undefined && typeof input.isText !== 'boolean') {
+                    return res.status(400).json(new ApiResponse(400, 'User input isText must be a boolean', {}));
+                }
+
+                if (input.isImage !== undefined && typeof input.isImage !== 'boolean') {
+                    return res.status(400).json(new ApiResponse(400, 'User input isImage must be a boolean', {}));
+                }
+
+                if (input.isMenu !== undefined && typeof input.isMenu !== 'boolean') {
+                    return res.status(400).json(new ApiResponse(400, 'User input isMenu must be a boolean', {}));
+                }
+
+                if (input.menuOptions !== undefined && !Array.isArray(input.menuOptions)) {
+                    return res.status(400).json(new ApiResponse(400, 'User input menuOptions must be an array', {}));
                 }
 
                 if (typeof input.isRequired !== 'boolean') {
                     return res.status(400).json(new ApiResponse(400, 'User input isRequired must be a boolean', {}));
                 }
+
+                const isImage = input.isImage !== undefined ? input.isImage : (input.isImageInput || false);
+                const isMenu = input.isMenu || false;
+                const isText = input.isText !== undefined ? input.isText : (!isImage && !isMenu);
+
+                normalizedInputs.push({
+                    question: input.question,
+                    isRequired: input.isRequired || false,
+                    isImageInput: isImage,
+                    isText,
+                    isImage,
+                    isMenu,
+                    menuOptions: Array.isArray(input.menuOptions) ? input.menuOptions : []
+                });
             }
         }
 
@@ -133,7 +164,7 @@ export const createProduct = async (req, res) => {
             positions: positionsArray,
             price,
             image,
-            userInputs: userInputs || [],
+            userInputs: normalizedInputs,
         });
 
         return res.status(201).json(new ApiResponse(201, 'Product created successfully', { product }));
@@ -196,21 +227,51 @@ export const updateProduct = async (req, res) => {
             if (!Array.isArray(userInputs)) {
                 return res.status(400).json(new ApiResponse(400, 'User inputs must be an array', {}));
             }
+            const normalizedInputs = [];
             for (const input of userInputs) {
                 if (!input.question || input.question.trim() === '') {
                     return res.status(400).json(new ApiResponse(400, 'User input question is required', {}));
                 }
 
-                if (typeof input.isImageInput !== 'boolean') {
+                if (input.isImageInput !== undefined && typeof input.isImageInput !== 'boolean') {
                     return res.status(400).json(new ApiResponse(400, 'User input isImageInput must be a boolean', {}));
+                }
+
+                if (input.isText !== undefined && typeof input.isText !== 'boolean') {
+                    return res.status(400).json(new ApiResponse(400, 'User input isText must be a boolean', {}));
+                }
+
+                if (input.isImage !== undefined && typeof input.isImage !== 'boolean') {
+                    return res.status(400).json(new ApiResponse(400, 'User input isImage must be a boolean', {}));
+                }
+
+                if (input.isMenu !== undefined && typeof input.isMenu !== 'boolean') {
+                    return res.status(400).json(new ApiResponse(400, 'User input isMenu must be a boolean', {}));
+                }
+
+                if (input.menuOptions !== undefined && !Array.isArray(input.menuOptions)) {
+                    return res.status(400).json(new ApiResponse(400, 'User input menuOptions must be an array', {}));
                 }
 
                 if (typeof input.isRequired !== 'boolean') {
                     return res.status(400).json(new ApiResponse(400, 'User input isRequired must be a boolean', {}));
                 }
 
+                const isImage = input.isImage !== undefined ? input.isImage : (input.isImageInput || false);
+                const isMenu = input.isMenu || false;
+                const isText = input.isText !== undefined ? input.isText : (!isImage && !isMenu);
+
+                normalizedInputs.push({
+                    question: input.question,
+                    isRequired: input.isRequired || false,
+                    isImageInput: isImage,
+                    isText,
+                    isImage,
+                    isMenu,
+                    menuOptions: Array.isArray(input.menuOptions) ? input.menuOptions : []
+                });
             }
-            product.userInputs = userInputs;
+            product.userInputs = normalizedInputs;
         }
 
         await product.save();
