@@ -1,5 +1,6 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { Upload, CheckCircle, X, RefreshCw } from 'lucide-react'
+import { apiRequest } from '../utils/api'
 
 interface UploadCardProps {
   label: string
@@ -40,16 +41,14 @@ export default function UploadCard({
     reader.onloadend = async () => {
       const base64 = reader.result as string
       try {
-        const res = await fetch('/api/v1/upload', {
+        const data = await apiRequest<{ url: string }>('/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ base64, fileName: file.name })
         })
-        const json = await res.json()
-        if (res.ok && json.data?.url) {
-          onChange(json.data.url)
+        if (data?.url) {
+          onChange(data.url)
         } else {
-          alert(json.message || 'Failed to upload image')
+          alert('Failed to upload image')
         }
       } catch (err) {
         console.error('Upload error:', err)

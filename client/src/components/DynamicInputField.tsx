@@ -1,6 +1,7 @@
 import { useRef, useState, type ChangeEvent } from 'react'
 import { Upload, Image, RefreshCw } from 'lucide-react'
 import type { UserInput } from '../data/mockData'
+import { apiRequest } from '../utils/api'
 
 interface DynamicInputFieldProps {
   input: UserInput
@@ -37,16 +38,14 @@ export default function DynamicInputField({ input, value, onChange }: DynamicInp
     reader.onloadend = async () => {
       const base64 = reader.result as string
       try {
-        const res = await fetch('/api/v1/upload', {
+        const data = await apiRequest<{ url: string }>('/upload', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ base64, fileName: file.name })
         })
-        const json = await res.json()
-        if (res.ok && json.data?.url) {
-          onChange(input.id, json.data.url)
+        if (data?.url) {
+          onChange(input.id, data.url)
         } else {
-          alert(json.message || 'Failed to upload image')
+          alert('Failed to upload image')
         }
       } catch (err) {
         console.error('Custom input upload error:', err)
