@@ -13,11 +13,8 @@ export interface Product {
   price: number
   isVisible: boolean
   positions: string[]
-  category: string
   userInputs: UserInput[]
 }
-
-export const CATEGORIES = ['All', 'Apparel', 'Accessories', 'Drinkware', 'Tech']
 
 export const SOCIETY_CONFIG = {
   name: 'OWASP Student Chapter',
@@ -36,7 +33,6 @@ export const products: Product[] = [
     price: 1799,
     isVisible: true,
     positions: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    category: 'Apparel',
     userInputs: [
       { id: 'size', question: 'Select your size', isImageInput: false, isRequired: true },
       { id: 'name-emb', question: 'Name for embroidery (optional, max 20 chars)', isImageInput: false, isRequired: false },
@@ -51,7 +47,6 @@ export const products: Product[] = [
     price: 1299,
     isVisible: true,
     positions: ['S', 'M', 'L', 'XL'],
-    category: 'Apparel',
     userInputs: [
       { id: 'size', question: 'Select your size', isImageInput: false, isRequired: true },
       { id: 'name-tag', question: 'Your name for the name tag', isImageInput: false, isRequired: true },
@@ -66,7 +61,6 @@ export const products: Product[] = [
     price: 799,
     isVisible: true,
     positions: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-    category: 'Apparel',
     userInputs: [
       { id: 'size', question: 'Select your size', isImageInput: false, isRequired: true },
     ],
@@ -80,7 +74,6 @@ export const products: Product[] = [
     price: 649,
     isVisible: true,
     positions: [],
-    category: 'Drinkware',
     userInputs: [
       { id: 'custom-msg', question: 'Custom message on mug (max 30 chars, optional)', isImageInput: false, isRequired: false },
     ],
@@ -94,7 +87,6 @@ export const products: Product[] = [
     price: 849,
     isVisible: true,
     positions: ['One Size'],
-    category: 'Accessories',
     userInputs: [
       { id: 'member-proof', question: 'Upload your chapter membership ID / proof', isImageInput: true, isRequired: true },
     ],
@@ -108,7 +100,6 @@ export const products: Product[] = [
     price: 699,
     isVisible: true,
     positions: [],
-    category: 'Accessories',
     userInputs: [],
   },
   {
@@ -120,7 +111,6 @@ export const products: Product[] = [
     price: 299,
     isVisible: true,
     positions: [],
-    category: 'Accessories',
     userInputs: [],
   },
   {
@@ -132,7 +122,6 @@ export const products: Product[] = [
     price: 1099,
     isVisible: true,
     positions: [],
-    category: 'Drinkware',
     userInputs: [],
   },
 ]

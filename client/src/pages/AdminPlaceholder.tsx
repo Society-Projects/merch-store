@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, ArrowLeft, Package, ShoppingCart, Eye, EyeOff, Plus, Check, Clock, ShieldAlert, FileText, Trash2
+  LayoutDashboard, ArrowLeft, Package, ShoppingCart, Eye, EyeOff, Plus, Check, Clock, ShieldAlert, FileText, Trash2, X, ExternalLink
 } from 'lucide-react'
 import { apiRequest } from '../utils/api'
 import { useAuth } from '../contexts/AuthContext'
@@ -18,6 +18,7 @@ export default function AdminPlaceholder() {
   const [orders, setOrders] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [selectedOrder, setSelectedOrder] = useState<any | null>(null)
 
   // Product Form State
   const [showProductForm, setShowProductForm] = useState(false)
@@ -26,7 +27,6 @@ export default function AdminPlaceholder() {
     description: '',
     price: 150,
     image: '',
-    category: 'Apparel',
     positions: ['EB', 'CORE', 'MEMBER'],
     userInputs: [] as { question: string; isRequired: boolean; isImageInput: boolean }[]
   })
@@ -70,6 +70,19 @@ export default function AdminPlaceholder() {
       setOrders(prev => prev.map(o => o.orderId === orderId ? { ...o, status: newStatus } : o))
     } catch (err) {
       toast('Failed to update status', 'error')
+    }
+  }
+
+  const handleDeleteOrder = async (orderId: string) => {
+    if (!window.confirm(`Are you sure you want to delete order ${orderId}?`)) return
+    try {
+      await apiRequest(`/orders/${orderId}`, {
+        method: 'DELETE'
+      })
+      toast('Order deleted successfully', 'success')
+      setOrders(prev => prev.filter(o => o.orderId !== orderId))
+    } catch (err) {
+      toast('Failed to delete order: ' + (err as Error).message, 'error')
     }
   }
 
@@ -123,7 +136,6 @@ export default function AdminPlaceholder() {
         description: '',
         price: 150,
         image: '',
-        category: 'Apparel',
         positions: ['EB', 'CORE', 'MEMBER'],
         userInputs: []
       })
@@ -198,17 +210,26 @@ export default function AdminPlaceholder() {
                     <tr className="border-b border-border text-muted-foreground font-medium">
                       <th className="pb-3">Order ID</th>
                       <th className="pb-3">Customer</th>
-                      <th className="pb-3">Roll No</th>
+                      <th className="pb-3">Position</th>
                       <th className="pb-3">Total Amount</th>
                       <th className="pb-3">Payment Receipt</th>
                       <th className="pb-3">Status</th>
                       <th className="pb-3">Placed At</th>
+                      <th className="pb-3 text-right pr-4">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/60">
                     {orders.map(order => (
                       <tr key={order._id} className="hover:bg-secondary/10">
-                        <td className="py-3 font-mono font-medium text-foreground">{order.orderId}</td>
+                        <td className="py-3">
+                          <button
+                            type="button"
+                            onClick={() => setSelectedOrder(order)}
+                            className="font-mono font-medium text-accent hover:underline cursor-pointer"
+                          >
+                            {order.orderId}
+                          </button>
+                        </td>
                         <td className="py-3 text-foreground">
                           <div>
                             <p className="font-medium">{order.details?.name}</p>
@@ -216,7 +237,7 @@ export default function AdminPlaceholder() {
                             <p className="text-xs text-muted-foreground">{order.details?.phone}</p>
                           </div>
                         </td>
-                        <td className="py-3 text-muted-foreground">{order.details?.rollNo}</td>
+                        <td className="py-3 text-muted-foreground font-medium">{order.userId?.role || 'Guest'}</td>
                         <td className="py-3 font-medium text-foreground">{formatPrice(order.totalPrice)}</td>
                         <td className="py-3">
                           <a
@@ -237,13 +258,32 @@ export default function AdminPlaceholder() {
                           >
                             <option value="pending">Pending Payment</option>
                             <option value="verified">Payment Verified</option>
-                            <option value="packed">Order Packed</option>
                             <option value="ready">Ready for Pickup</option>
-                            <option value="completed">Completed</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
                           </select>
                         </td>
                         <td className="py-3 text-muted-foreground text-xs">
                           {new Date(order.createdAt).toLocaleDateString()}
+                        </td>
+                        <td className="py-3 text-right pr-4">
+                          <div className="flex justify-end gap-1.5 ml-auto">
+                            <button
+                              type="button"
+                              onClick={() => setSelectedOrder(order)}
+                              className="h-8 w-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-accent hover:bg-accent/10 transition-all cursor-pointer inline-flex"
+                              title="View Details"
+                            >
+                              <Eye size={14} />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteOrder(order.orderId)}
+                              className="h-8 w-8 rounded-lg border border-border flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-all cursor-pointer inline-flex animate-fade-in"
+                              title="Delete Order"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -287,30 +327,15 @@ export default function AdminPlaceholder() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-medium text-foreground">Price (₹) *</label>
-                      <input
-                        type="number"
-                        required
-                        value={newProduct.price}
-                        onChange={e => setNewProduct(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
-                        className="h-10 px-3 bg-background border border-border rounded-xl text-sm"
-                      />
-                    </div>
-                    <div className="flex flex-col gap-1.5">
-                      <label className="text-xs font-medium text-foreground">Category</label>
-                      <select
-                        value={newProduct.category}
-                        onChange={e => setNewProduct(prev => ({ ...prev, category: e.target.value }))}
-                        className="h-10 px-3 bg-background border border-border rounded-xl text-sm cursor-pointer"
-                      >
-                        <option value="Apparel">Apparel</option>
-                        <option value="Accessories">Accessories</option>
-                        <option value="Drinkware">Drinkware</option>
-                        <option value="Tech">Tech</option>
-                      </select>
-                    </div>
+                  <div className="flex flex-col gap-1.5">
+                    <label className="text-xs font-medium text-foreground">Price (₹) *</label>
+                    <input
+                      type="number"
+                      required
+                      value={newProduct.price}
+                      onChange={e => setNewProduct(prev => ({ ...prev, price: parseInt(e.target.value) || 0 }))}
+                      className="h-10 px-3 bg-background border border-border rounded-xl text-sm"
+                    />
                   </div>
                 </div>
 
@@ -410,9 +435,6 @@ export default function AdminPlaceholder() {
                       ) : (
                         <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No image available</div>
                       )}
-                      <span className="absolute top-2 left-2 bg-card/90 backdrop-blur-sm text-foreground text-[10px] px-2 py-0.5 rounded-full border border-border">
-                        {prod.category}
-                      </span>
                     </div>
 
                     <div className="flex flex-col gap-1 flex-1">
@@ -447,6 +469,145 @@ export default function AdminPlaceholder() {
             </div>
           </div>
         )}
+      {/* Order Details Modal */}
+      {selectedOrder && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-2xl max-h-[85vh] flex flex-col shadow-2xl animate-fade-in overflow-hidden">
+            {/* Modal Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-border">
+              <div>
+                <h3 className="font-bold text-foreground text-base">Order Details</h3>
+                <p className="text-xs text-muted-foreground">ID: {selectedOrder.orderId}</p>
+              </div>
+              <button
+                onClick={() => setSelectedOrder(null)}
+                className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-all cursor-pointer"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 text-left">
+              {/* Customer & Status Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-1.5 p-4 rounded-xl border border-border/60 bg-muted/20">
+                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Customer Details</h4>
+                  <p className="text-sm font-semibold text-foreground">{selectedOrder.details?.name}</p>
+                  <p className="text-xs text-muted-foreground">{selectedOrder.details?.email}</p>
+                  {selectedOrder.details?.phone && <p className="text-xs text-muted-foreground">{selectedOrder.details.phone}</p>}
+                  <div className="mt-1">
+                    <span className="text-[10px] bg-secondary text-secondary-foreground font-semibold px-2 py-0.5 rounded-full border border-border">
+                      Role: {selectedOrder.userId?.role || 'Guest'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1.5 p-4 rounded-xl border border-border/60 bg-muted/20">
+                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status & Summary</h4>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold">Current Status:</span>
+                    <span className="capitalize text-xs font-medium text-foreground px-2 py-0.5 rounded-full bg-accent/10 border border-accent/20">
+                      {selectedOrder.status}
+                    </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1 font-medium">Placed: {new Date(selectedOrder.createdAt).toLocaleString()}</p>
+                  <p className="text-sm font-bold text-foreground mt-1">Total Amount: {formatPrice(selectedOrder.totalPrice)}</p>
+                </div>
+              </div>
+
+              {/* Items Customisation Details */}
+              <div className="flex flex-col gap-4">
+                <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Items & Customisations</h4>
+                <div className="flex flex-col gap-3">
+                  {selectedOrder.items?.map((item: any, idx: number) => {
+                    const hasInputs = item.userInputValues && Object.keys(item.userInputValues).length > 0;
+                    return (
+                      <div key={idx} className="border border-border/60 rounded-xl p-4 flex flex-col gap-3 bg-muted/10">
+                        <div className="flex justify-between items-start gap-4">
+                          <div>
+                            <p className="text-sm font-semibold text-foreground">{item.product?.name || 'Unknown Product'}</p>
+                            {item.selectedPosition && (
+                              <p className="text-xs text-muted-foreground mt-0.5">Size/Position: {item.selectedPosition}</p>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                            <p className="text-sm font-semibold text-foreground">{formatPrice((item.product?.price || 0) * item.quantity)}</p>
+                          </div>
+                        </div>
+
+                        {/* Customisation inputs rendering */}
+                        {hasInputs && (
+                          <div className="border-t border-border/60 pt-3 flex flex-col gap-2">
+                            <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Customisation Details</p>
+                            <div className="flex flex-col gap-2">
+                              {Object.entries(item.userInputValues).map(([questionId, value]: any) => {
+                                const questionText = item.product?.userInputs?.find((ui: any) => ui.id === questionId)?.question || questionId;
+                                const isImageUrl = typeof value === 'string' && (
+                                  value.startsWith('http') || value.includes('cloudinary.com') || /\.(jpg|jpeg|png|gif|webp)/i.test(value)
+                                );
+
+                                return (
+                                  <div key={questionId} className="flex flex-col gap-1 text-xs">
+                                    <span className="text-muted-foreground font-medium">{questionText}:</span>
+                                    {isImageUrl ? (
+                                      <div className="mt-1 relative max-w-xs aspect-video rounded-lg overflow-hidden border border-border bg-muted flex items-center justify-center group">
+                                        <img src={value} alt="User submission" className="w-full h-full object-cover" />
+                                        <a
+                                          href={value}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 font-semibold"
+                                        >
+                                          View Full Image <ExternalLink size={12} />
+                                        </a>
+                                      </div>
+                                    ) : (
+                                      <span className="text-foreground font-semibold bg-secondary/40 px-2 py-1 rounded-lg border border-border/40 inline-block w-fit">
+                                        {value}
+                                      </span>
+                                    )}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Payment Receipt */}
+              {selectedOrder.paymentScreenshot && (
+                <div className="flex flex-col gap-2 border-t border-border pt-4">
+                  <h4 className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Payment Receipt Screenshot</h4>
+                  <div className="relative max-w-md aspect-video rounded-xl overflow-hidden border border-border bg-muted flex items-center justify-center group mt-1">
+                    <img src={selectedOrder.paymentScreenshot} alt="Payment Receipt" className="w-full h-full object-cover" />
+                    <a
+                      href={selectedOrder.paymentScreenshot}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 font-semibold text-xs"
+                    >
+                      View Full Receipt <ExternalLink size={12} />
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-border flex justify-end">
+              <Button onClick={() => setSelectedOrder(null)} variant="outline">
+                Close Details
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       </div>
     </div>
   )

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import auth from "#src/middlewares/auth.js";
-import { createOrder, getOrdersMe, getOrderById, listAllOrders, updateOrderStatus } from "#src/functions/orders/orders.controller.js";
+import { createOrder, getOrdersMe, getOrderById, listAllOrders, updateOrderStatus, deleteOrder } from "#src/functions/orders/orders.controller.js";
 
 const router = Router();
 
@@ -18,7 +18,8 @@ router.route("/all")
 
 // Get single order detail (accessible by owner or EB/CORE admins)
 router.route("/:id")
-    .get(auth(), getOrderById);
+    .get(auth(), getOrderById)
+    .delete(auth("CORE"), deleteOrder);
 
 // Update order status (EB/CORE only)
 router.route("/:id/status")

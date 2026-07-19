@@ -5,17 +5,42 @@ import { apiRequest } from '../utils/api'
 import { formatPrice } from '../data/mockData'
 import { useCart } from '../contexts/CartContext'
 import { useToast } from '../contexts/ToastContext'
+import { useAuth } from '../contexts/AuthContext'
 import DynamicInputField from '../components/DynamicInputField'
 import Button from '../components/Button'
 import EmptyState from '../components/EmptyState'
 import { ProductDetailSkeleton } from '../components/LoadingSkeleton'
 import Footer from '../components/Footer'
 
+const renderDescription = (desc: string) => {
+  if (!desc) return null
+  const urlRegex = /(https?:\/\/[^\s]+?\.(?:png|jpg|jpeg|gif|webp|svg))/gi
+  const parts = desc.split(urlRegex)
+  const matches = desc.match(urlRegex)
+
+  return (
+    <div className="flex flex-col gap-3">
+      <p className="text-sm text-muted-foreground leading-relaxed">
+        {parts.map((part) => {
+          if (part.match(urlRegex)) return null
+          return part
+        })}
+      </p>
+      {matches && matches.map((url, idx) => (
+        <div key={idx} className="mt-2 rounded-xl overflow-hidden border border-border max-w-md aspect-video bg-muted flex items-center justify-center animate-fade-in">
+          <img src={url} alt="Description illustration" className="w-full h-full object-cover" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { addItem } = useCart()
   const { toast } = useToast()
+  const { user } = useAuth()
 
   const [product, setProduct] = useState<any | null>(null)
   const [loading, setLoading] = useState(true)
@@ -25,6 +50,7 @@ export default function ProductDetailPage() {
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [adding, setAdding] = useState(false)
 
+  // Fetch data
   useEffect(() => {
     if (!id) return
     setLoading(true)
@@ -35,9 +61,9 @@ export default function ProductDetailPage() {
           const formatted = {
             ...p,
             id: p._id,
-            userInputs: (p.userInputs || []).map((input: any, index: number) => ({
+            userInputs: (p.userInputs || []).map((input: any) => ({
               ...input,
-              id: input.id || `input-${index}`
+              id: input.question
             }))
           }
           setProduct(formatted)
@@ -52,8 +78,6 @@ export default function ProductDetailPage() {
       })
   }, [id])
 
-  const isRoleBasedPosition = product && product.positions.some((pos: string) => ['EB', 'CORE', 'MEMBER'].includes(pos))
-
   const handleInputChange = (fieldId: string, value: string) => {
     setInputValues(prev => ({ ...prev, [fieldId]: value }))
     setErrors(prev => ({ ...prev, [fieldId]: '' }))
@@ -62,10 +86,6 @@ export default function ProductDetailPage() {
   const validate = (): boolean => {
     if (!product) return false
     const newErrors: Record<string, string> = {}
-
-    if (product.positions.length > 0 && !isRoleBasedPosition && !selectedPosition) {
-      newErrors._position = 'Please select a size / position'
-    }
 
     product.userInputs.forEach(input => {
       if (input.isRequired && !inputValues[input.id]?.trim()) {
@@ -84,7 +104,7 @@ export default function ProductDetailPage() {
     addItem({
       product,
       quantity: qty,
-      selectedPosition: isRoleBasedPosition ? '' : selectedPosition,
+      selectedPosition: product.positions.length > 0 ? (user?.role || 'MEMBER') : '',
       userInputValues: inputValues,
     })
     toast(`${product.name} added to cart!`, 'success')
@@ -134,48 +154,16 @@ export default function ProductDetailPage() {
               alt={product.name}
               className="w-full h-full object-cover"
             />
-            <span className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm text-card-foreground text-xs font-medium px-2.5 py-1 rounded-full border border-border">
-              {product.category}
-            </span>
           </div>
 
           {/* Info */}
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-2">
-              <p className="text-xs font-semibold text-accent uppercase tracking-widest">{product.category}</p>
               <h1 className="text-2xl md:text-3xl font-bold text-foreground leading-tight">{product.name}</h1>
               <p className="text-2xl font-bold text-foreground">{formatPrice(product.price)}</p>
             </div>
 
-            <p className="text-sm text-muted-foreground leading-relaxed">{product.description}</p>
-
-            {/* Position / Size selector */}
-            {product.positions.length > 0 && !isRoleBasedPosition && (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm font-medium text-foreground">
-                  Size / Position <span className="text-red-500">*</span>
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {product.positions.map(pos => (
-                    <button
-                      key={pos}
-                      onClick={() => { setSelectedPosition(pos); setErrors(e => ({ ...e, _position: '' })) }}
-                      className={`h-9 px-4 rounded-xl text-sm font-medium border transition-all duration-200 cursor-pointer ${selectedPosition === pos
-                        ? 'border-accent bg-accent text-accent-foreground'
-                        : 'border-border text-foreground hover:border-accent hover:bg-accent/5'
-                        }`}
-                    >
-                      {pos}
-                    </button>
-                  ))}
-                </div>
-                {errors._position && (
-                  <p className="text-xs text-red-500 flex items-center gap-1">
-                    <AlertCircle size={11} />{errors._position}
-                  </p>
-                )}
-              </div>
-            )}
+            {renderDescription(product.description)}
 
             {/* Dynamic fields */}
             {product.userInputs.length > 0 && (

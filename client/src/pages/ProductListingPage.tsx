@@ -4,7 +4,6 @@ import { SlidersHorizontal, ChevronDown } from 'lucide-react'
 import { apiRequest } from '../utils/api'
 import ProductGrid from '../components/ProductGrid'
 import SearchBar from '../components/SearchBar'
-// import CategoryFilter from '../components/CategoryFilter'
 import Footer from '../components/Footer'
 
 const SORT_OPTIONS = [
@@ -22,7 +21,6 @@ export default function ProductListingPage() {
   const [sortOpen, setSortOpen] = useState(false)
 
   const q = params.get('q') || ''
-  // const cat = params.get('cat') || 'All'
 
   useEffect(() => {
     setLoading(true)
@@ -45,15 +43,8 @@ export default function ProductListingPage() {
     setParams(p)
   }
 
-  // const setCategory = (c: string) => {
-  //   const p = new URLSearchParams(params)
-  //   if (c === 'All') p.delete('cat'); else p.set('cat', c)
-  //   setParams(p)
-  // }
-
   const filtered = useMemo(() => {
     let list = productsList.filter(p => p.isVisible)
-    // if (cat && cat !== 'All') list = list.filter(p => p.category === cat)
     if (q) list = list.filter(p => p.name.toLowerCase().includes(q.toLowerCase()) || p.description.toLowerCase().includes(q.toLowerCase()))
 
     switch (sort) {
@@ -63,7 +54,6 @@ export default function ProductListingPage() {
       default: return list
     }
   }, [productsList, q, sort])
-  // }, [productsList, cat, q, sort])
 
   const clearFilters = () => {
     setParams({})
@@ -120,9 +110,6 @@ export default function ProductListingPage() {
             )}
           </div>
         </div>
-
-        {/* Category filter
-        <CategoryFilter selected={cat} onChange={setCategory} className="mb-8" /> */}
 
         {/* Product grid */}
         <ProductGrid products={filtered} loading={loading} onClearFilters={clearFilters} />

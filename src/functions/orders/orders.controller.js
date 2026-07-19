@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import { Order } from "#src/models/Order.js";
+import { Product } from "#src/models/Product.js";
 import ApiResponse from "#src/classes/ApiResponse.js";
 
 // Helper to generate a unique human-readable order ID
@@ -9,7 +10,7 @@ const generateOrderId = () => {
 
 export const createOrder = async (req, res) => {
     try {
-        const { items, totalPrice, details, paymentScreenshot } = req.body;
+        const { items, totalPrice, paymentScreenshot, notes } = req.body;
 
         if (!items || !Array.isArray(items) || items.length === 0) {
             return res.status(400).json(new ApiResponse(400, "Items array is required"));
@@ -19,27 +20,75 @@ export const createOrder = async (req, res) => {
             return res.status(400).json(new ApiResponse(400, "Invalid total price"));
         }
 
-        if (!details || !details.name || !details.email || !details.phone || !details.rollNo) {
-            return res.status(400).json(new ApiResponse(400, "Incomplete customer details"));
-        }
-
         if (!paymentScreenshot) {
             return res.status(400).json(new ApiResponse(400, "Payment proof screenshot is required"));
         }
 
+        if (!req.user) {
+            return res.status(401).json(new ApiResponse(401, "User authentication required"));
+        }
+
+        // Validate items and compute price on backend
+        let calculatedPrice = 0;
+        const validatedItems = [];
+
+        for (const item of items) {
+            if (!item.product) {
+                return res.status(400).json(new ApiResponse(400, "Product ID is required for all items"));
+            }
+
+            const dbProduct = await Product.findById(item.product);
+            if (!dbProduct) {
+                return res.status(404).json(new ApiResponse(404, `Product not found: ${item.product}`));
+            }
+
+            if (!dbProduct.isVisible) {
+                return res.status(400).json(new ApiResponse(400, `Product ${dbProduct.name} is not visible`));
+            }
+
+            // Check position authorization
+            if (dbProduct.positions && !dbProduct.positions.includes(req.user.role)) {
+                return res.status(403).json(new ApiResponse(403, `You are not authorized to purchase: ${dbProduct.name}`));
+            }
+
+            const qty = Number(item.quantity) || 1;
+            calculatedPrice += dbProduct.price * qty;
+
+            validatedItems.push({
+                product: dbProduct._id,
+                quantity: qty,
+                selectedPosition: item.selectedPosition,
+                userInputValues: item.userInputValues
+            });
+        }
+
+        const HANDLING_FEE = 0;
+        const expectedTotal = calculatedPrice + HANDLING_FEE;
+
+        // Verify total price (allowing a very small floating point tolerance)
+        if (Math.abs(expectedTotal - totalPrice) > 0.01) {
+            return res.status(400).json(new ApiResponse(400, `Price mismatch. Expected: ${expectedTotal}, Received: ${totalPrice}`));
+        }
+
+        const details = {
+            name: `${req.user.firstName || ""} ${req.user.lastName || ""}`.trim(),
+            email: req.user.email,
+            phone: "",
+            rollNo: "",
+            college: "",
+            notes: notes || ""
+        };
+
         const orderId = generateOrderId();
         const orderData = {
             orderId,
-            items,
-            totalPrice,
+            items: validatedItems,
+            totalPrice: expectedTotal,
             details,
             paymentScreenshot,
-            status: "pending"
+            status: "pending",
+            userId: req.user.id
         };
-
-        if (req.user) {
-            orderData.userId = req.user.id;
-        }
 
         const order = await Order.create(orderData);
         return res.status(201).json(new ApiResponse(201, "Order placed successfully", { order }));
@@ -71,9 +120,9 @@ export const getOrderById = async (req, res) => {
         }
 
         // Try searching by orderId first, then fallback to Mongoose ObjectId
-        let order = await Order.findOne({ orderId: id }).populate('items.product');
+        let order = await Order.findOne({ orderId: id }).populate('items.product').populate('userId');
         if (!order && id.match(/^[0-9a-fA-F]{24}$/)) {
-            order = await Order.findById(id).populate('items.product');
+            order = await Order.findById(id).populate('items.product').populate('userId');
         }
 
         if (!order) {
@@ -95,7 +144,7 @@ export const getOrderById = async (req, res) => {
 
 export const listAllOrders = async (req, res) => {
     try {
-        const orders = await Order.find().populate('items.product').sort({ createdAt: -1 });
+        const orders = await Order.find().populate('items.product').populate('userId').sort({ createdAt: -1 });
         return res.status(200).json(new ApiResponse(200, "All orders retrieved successfully", { orders }));
     } catch (error) {
         console.error("Admin retrieve orders error:", error);
@@ -127,6 +176,31 @@ export const updateOrderStatus = async (req, res) => {
         return res.status(200).json(new ApiResponse(200, "Order status updated successfully", { order }));
     } catch (error) {
         console.error("Update order status error:", error);
+        return res.status(500).json(new ApiResponse(500, "Internal Server Error", { message: error.message }));
+    }
+};
+
+export const deleteOrder = async (req, res) => {
+    try {
+        const { id } = req.params;
+        if (!id) {
+            return res.status(400).json(new ApiResponse(400, "Order ID is required"));
+        }
+
+        let order = await Order.findOne({ orderId: id });
+        if (!order && id.match(/^[0-9a-fA-F]{24}$/)) {
+            order = await Order.findById(id);
+        }
+
+        if (!order) {
+            return res.status(404).json(new ApiResponse(404, "Order not found"));
+        }
+
+        await Order.deleteOne({ _id: order._id });
+
+        return res.status(200).json(new ApiResponse(200, "Order deleted successfully"));
+    } catch (error) {
+        console.error("Delete order error:", error);
         return res.status(500).json(new ApiResponse(500, "Internal Server Error", { message: error.message }));
     }
 };

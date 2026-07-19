@@ -2,7 +2,7 @@ import { type ReactNode } from 'react'
 import { ShoppingBag, Search, PackageX, AlertCircle } from 'lucide-react'
 import Button from './Button'
 
-type EmptyVariant = 'cart' | 'no-products' | 'no-results' | 'unavailable' | 'error'
+type EmptyVariant = 'cart' | 'no-products' | 'no-results' | 'unavailable' | 'error' | 'no-orders'
 
 const config: Record<EmptyVariant, { icon: ReactNode; title: string; desc: string }> = {
   cart: {
@@ -14,6 +14,11 @@ const config: Record<EmptyVariant, { icon: ReactNode; title: string; desc: strin
     icon: <PackageX size={40} strokeWidth={1.5} />,
     title: 'No products yet',
     desc: 'Check back soon — new merchandise drops regularly.',
+  },
+  'no-orders': {
+    icon: <ShoppingBag size={40} strokeWidth={1.5} />,
+    title: 'No orders placed yet',
+    desc: "You haven't placed any merchandise orders yet.",
   },
   'no-results': {
     icon: <Search size={40} strokeWidth={1.5} />,

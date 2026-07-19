@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Menu, X, Shield, LayoutDashboard, LogIn, LogOut, User } from 'lucide-react'
+import { ShoppingCart, Menu, X, Shield, LayoutDashboard, LogIn, LogOut, User, ClipboardList } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
 import { useAuth } from '../contexts/AuthContext'
 import { SOCIETY_CONFIG } from '../data/mockData'
@@ -85,7 +85,14 @@ export default function Navbar() {
             <div className="h-4 w-px bg-border mx-1" />
 
             {user ? (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5">
+                <Link
+                  to="/orders"
+                  className="h-9 px-3 flex items-center gap-2 rounded-xl text-sm text-muted-foreground hover:text-foreground hover:bg-secondary transition-all duration-200"
+                >
+                  <ClipboardList size={15} className="shrink-0" />
+                  <span>My Orders</span>
+                </Link>
                 <div className="flex items-center gap-2 pl-1 pr-2 py-1 rounded-full bg-secondary/50 border border-border">
                   {user.avatar ? (
                     <img src={user.avatar} alt={user.firstName} className="h-6 w-6 rounded-full object-cover" />
@@ -164,6 +171,16 @@ export default function Navbar() {
                 >
                   <LayoutDashboard size={14} />
                   Admin Dashboard
+                </Link>
+              )}
+              {user && (
+                <Link
+                  to="/orders"
+                  onClick={() => setMobileOpen(false)}
+                  className="h-10 px-3 flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground hover:bg-secondary rounded-xl transition-all font-medium"
+                >
+                  <ClipboardList size={14} />
+                  My Orders
                 </Link>
               )}
 

@@ -13,7 +13,6 @@ connectDB().then(async () => {
             positions: ["EB", "CORE", "MEMBER"],
             price: 1799,
             image: "https://images.unsplash.com/photo-1556821840-3a63f95609a7?w=800&h=800&fit=crop&auto=format",
-            category: "Apparel",
             userInputs: [
                 { question: "Select your size (XS/S/M/L/XL/XXL)", isRequired: true, isImageInput: false },
                 { question: "Name for embroidery (optional, max 20 chars)", isRequired: false, isImageInput: false }
@@ -26,7 +25,6 @@ connectDB().then(async () => {
             positions: ["EB", "CORE", "MEMBER"],
             price: 1299,
             image: "https://images.unsplash.com/photo-1598033129183-c4f50c736f10?w=800&h=800&fit=crop&auto=format",
-            category: "Apparel",
             userInputs: [
                 { question: "Select your size (S/M/L/XL)", isRequired: true, isImageInput: false },
                 { question: "Your name for the name tag", isRequired: true, isImageInput: false }
@@ -39,7 +37,6 @@ connectDB().then(async () => {
             positions: ["EB", "CORE", "MEMBER"],
             price: 649,
             image: "https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?w=800&h=800&fit=crop&auto=format",
-            category: "Drinkware",
             userInputs: [
                 { question: "Custom message on mug (max 30 chars, optional)", isRequired: false, isImageInput: false }
             ]
@@ -51,7 +48,6 @@ connectDB().then(async () => {
             positions: ["EB", "CORE", "MEMBER"],
             price: 849,
             image: "https://images.unsplash.com/photo-1588850561407-ed78c282e89b?w=800&h=800&fit=crop&auto=format",
-            category: "Accessories",
             userInputs: [
                 { question: "Upload your chapter membership ID / proof", isRequired: true, isImageInput: true }
             ]
@@ -63,7 +59,6 @@ connectDB().then(async () => {
             positions: ["EB"],
             price: 2999,
             image: "https://images.unsplash.com/photo-1594938298603-c8148c4dae35?w=800&h=800&fit=crop&auto=format",
-            category: "Apparel",
             userInputs: [
                 { question: "Select your chest size (38/40/42/44)", isRequired: true, isImageInput: false },
                 { question: "Upload EB Appointment Letter", isRequired: true, isImageInput: true }

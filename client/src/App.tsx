@@ -12,8 +12,10 @@ import ProductListingPage from './pages/ProductListingPage'
 import ProductDetailPage from './pages/ProductDetailPage'
 import CartPage from './pages/CartPage'
 import CheckoutPage from './pages/CheckoutPage'
+import OrdersPage from './pages/OrdersPage'
 import OrderStatusPage from './pages/OrderStatusPage'
 import AdminPlaceholder from './pages/AdminPlaceholder'
+import NotFoundPage from './pages/NotFoundPage'
 
 export default function App() {
   return (
@@ -31,8 +33,10 @@ export default function App() {
                   <Route path="/products/:id" element={<ProductDetailPage />} />
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/checkout" element={<CheckoutPage />} />
+                  <Route path="/orders" element={<OrdersPage />} />
                   <Route path="/orders/:id" element={<OrderStatusPage />} />
                   <Route path="/admin" element={<AdminPlaceholder />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </main>
               <CartDrawer />

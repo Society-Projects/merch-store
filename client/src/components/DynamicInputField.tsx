@@ -1,5 +1,5 @@
-import { useRef, type ChangeEvent } from 'react'
-import { Upload, Image } from 'lucide-react'
+import { useRef, useState, type ChangeEvent } from 'react'
+import { Upload, Image, RefreshCw } from 'lucide-react'
 import type { UserInput } from '../data/mockData'
 
 interface DynamicInputFieldProps {
@@ -8,13 +8,27 @@ interface DynamicInputFieldProps {
   onChange: (id: string, value: string) => void
 }
 
+const getFriendlyName = (url: string) => {
+  if (!url) return '';
+  try {
+    const parts = url.split('/');
+    const lastPart = parts[parts.length - 1];
+    const fileName = lastPart.split('?')[0].split('#')[0];
+    return decodeURIComponent(fileName);
+  } catch (e) {
+    return 'Uploaded file';
+  }
+}
+
 export default function DynamicInputField({ input, value, onChange }: DynamicInputFieldProps) {
   const fileRef = useRef<HTMLInputElement>(null)
+  const [uploading, setUploading] = useState(false)
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
 
+    setUploading(true)
     const reader = new FileReader()
     reader.onloadend = async () => {
       const base64 = reader.result as string
@@ -25,7 +39,7 @@ export default function DynamicInputField({ input, value, onChange }: DynamicInp
           body: JSON.stringify({ base64, fileName: file.name })
         })
         const json = await res.json()
-        if (json.success && json.data?.url) {
+        if (res.ok && json.data?.url) {
           onChange(input.id, json.data.url)
         } else {
           alert(json.message || 'Failed to upload image')
@@ -33,6 +47,8 @@ export default function DynamicInputField({ input, value, onChange }: DynamicInp
       } catch (err) {
         console.error('Custom input upload error:', err)
         alert('Upload error: ' + (err as Error).message)
+      } finally {
+        setUploading(false)
       }
     }
     reader.readAsDataURL(file)
@@ -47,28 +63,35 @@ export default function DynamicInputField({ input, value, onChange }: DynamicInp
 
       {input.isImageInput ? (
         <div>
-          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
-          <button
-            type="button"
-            onClick={() => fileRef.current?.click()}
-            className={`w-full border-2 border-dashed rounded-xl p-5 flex flex-col items-center gap-2 transition-all duration-200 cursor-pointer hover:border-accent hover:bg-accent/5 ${
-              value ? 'border-accent bg-accent/5' : 'border-border'
-            }`}
-          >
-            {value ? (
-              <>
-                <Image size={20} className="text-accent" />
-                <p className="text-sm font-medium text-accent truncate max-w-[200px]">{value}</p>
-                <p className="text-xs text-muted-foreground">Click to replace</p>
-              </>
-            ) : (
-              <>
-                <Upload size={20} className="text-muted-foreground" />
-                <p className="text-sm text-muted-foreground">Click to upload image</p>
-                <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
-              </>
-            )}
-          </button>
+          <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFileChange} disabled={uploading} />
+          {uploading ? (
+            <div className="w-full border-2 border-dashed border-muted rounded-xl p-5 flex flex-col items-center gap-2 text-muted-foreground bg-muted/5">
+              <RefreshCw size={20} className="animate-spin text-accent" />
+              <p className="text-sm font-medium">Uploading image...</p>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileRef.current?.click()}
+              className={`w-full border-2 border-dashed rounded-xl p-5 flex flex-col items-center gap-2 transition-all duration-200 cursor-pointer hover:border-accent hover:bg-accent/5 ${
+                value ? 'border-accent bg-accent/5' : 'border-border'
+              }`}
+            >
+              {value ? (
+                <>
+                  <Image size={20} className="text-accent" />
+                  <p className="text-sm font-medium text-accent truncate max-w-[200px]">{getFriendlyName(value)}</p>
+                  <p className="text-xs text-muted-foreground">Click to replace</p>
+                </>
+              ) : (
+                <>
+                  <Upload size={20} className="text-muted-foreground" />
+                  <p className="text-sm text-muted-foreground">Click to upload image</p>
+                  <p className="text-xs text-muted-foreground">PNG, JPG up to 10MB</p>
+                </>
+              )}
+            </button>
+          )}
         </div>
       ) : (
         <input

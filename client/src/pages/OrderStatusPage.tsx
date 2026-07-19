@@ -17,17 +17,15 @@ interface TimelineStep {
 const TIMELINE: TimelineStep[] = [
   { id: 'pending', label: 'Pending Payment', desc: 'Waiting for payment verification', icon: <CreditCard size={16} /> },
   { id: 'verified', label: 'Payment Verified', desc: 'Payment confirmed by the team', icon: <CheckCircle size={16} /> },
-  { id: 'packed', label: 'Order Packed', desc: 'Your items have been packed', icon: <Package size={16} /> },
   { id: 'ready', label: 'Ready for Pickup', desc: 'Visit the collection point on campus', icon: <MapPin size={16} /> },
-  { id: 'completed', label: 'Completed', desc: 'Order collected. Thank you!', icon: <Check size={16} /> },
+  { id: 'delivered', label: 'Delivered', desc: 'Order collected. Thank you!', icon: <Check size={16} /> },
 ]
 
 const STATUS_INDEX: Record<string, number> = {
   pending: 0,
   verified: 1,
-  packed: 2,
-  ready: 3,
-  completed: 4,
+  ready: 2,
+  delivered: 3,
 }
 
 export default function OrderStatusPage() {
@@ -129,17 +127,22 @@ export default function OrderStatusPage() {
         {/* Status badge */}
         <div className="flex items-center gap-3 p-4 bg-card border border-border rounded-2xl mb-8">
           <div className={`h-10 w-10 rounded-xl flex items-center justify-center shrink-0 ${
-            currentStatus === 'completed' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' :
+            currentStatus === 'delivered' ? 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600' :
             currentStatus === 'pending' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-600' :
+            currentStatus === 'cancelled' ? 'bg-rose-100 dark:bg-rose-900/30 text-rose-600' :
             'bg-accent/10 text-accent'
           }`}>
-            {TIMELINE[activeIndex].icon}
+            {currentStatus === 'cancelled' ? <AlertTriangle size={16} /> : TIMELINE[activeIndex].icon}
           </div>
           <div>
-            <p className="font-semibold text-foreground">{TIMELINE[activeIndex].label}</p>
-            <p className="text-xs text-muted-foreground">{TIMELINE[activeIndex].desc}</p>
+            <p className="font-semibold text-foreground">
+              {currentStatus === 'cancelled' ? 'Order Cancelled' : TIMELINE[activeIndex].label}
+            </p>
+            <p className="text-xs text-muted-foreground">
+              {currentStatus === 'cancelled' ? 'This order has been cancelled by the team.' : TIMELINE[activeIndex].desc}
+            </p>
           </div>
-          {currentStatus !== 'completed' && (
+          {currentStatus !== 'delivered' && currentStatus !== 'cancelled' && (
             <span className="ml-auto flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
               <Clock size={11} />
               Processing
@@ -147,59 +150,71 @@ export default function OrderStatusPage() {
           )}
         </div>
 
-        {/* Timeline */}
-        <div className="bg-card border border-border rounded-2xl p-6">
-          <h2 className="font-semibold text-foreground mb-6">Order Timeline</h2>
-
-          <div className="flex flex-col gap-0">
-            {TIMELINE.map((step, i) => {
-              const done = i < activeIndex
-              const active = i === activeIndex
-              const upcoming = i > activeIndex
-
-              return (
-                <div key={step.id} className="flex gap-4">
-                  {/* Line + circle */}
-                  <div className="flex flex-col items-center">
-                    <div className={`h-8 w-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${
-                      done ? 'border-accent bg-accent text-accent-foreground' :
-                      active ? 'border-primary bg-primary text-primary-foreground' :
-                      'border-border bg-background text-muted-foreground'
-                    }`}>
-                      {done ? <Check size={13} /> : step.icon}
-                    </div>
-                    {i < TIMELINE.length - 1 && (
-                      <div className={`w-px flex-1 my-1 min-h-[2rem] transition-colors duration-300 ${
-                        done ? 'bg-accent' : 'bg-border'
-                      }`} />
-                    )}
-                  </div>
-
-                  {/* Content */}
-                  <div className={`pb-6 flex flex-col gap-0.5 ${i === TIMELINE.length - 1 ? 'pb-0' : ''}`}>
-                    <p className={`text-sm font-semibold leading-tight ${
-                      upcoming ? 'text-muted-foreground' : 'text-foreground'
-                    }`}>
-                      {step.label}
-                    </p>
-                    <p className={`text-xs ${upcoming ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
-                      {step.desc}
-                    </p>
-                    {done && (
-                      <p className="text-xs text-accent font-medium mt-0.5">✓ Completed</p>
-                    )}
-                    {active && currentStatus !== 'completed' && (
-                      <div className="flex items-center gap-1.5 mt-1">
-                        <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-                        <p className="text-xs text-accent font-medium">In progress</p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
+        {/* Cancellation Banner */}
+        {currentStatus === 'cancelled' && (
+          <div className="mb-8 p-4 bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-800 rounded-2xl text-center">
+            <p className="text-sm font-semibold text-rose-700 dark:text-rose-400">Order Cancelled</p>
+            <p className="text-xs text-rose-700/80 dark:text-rose-400/80 mt-1">
+              This order has been cancelled. If you believe this is a mistake or have already paid, please contact support.
+            </p>
           </div>
-        </div>
+        )}
+
+        {/* Timeline */}
+        {currentStatus !== 'cancelled' && (
+          <div className="bg-card border border-border rounded-2xl p-6">
+            <h2 className="font-semibold text-foreground mb-6">Order Timeline</h2>
+
+            <div className="flex flex-col gap-0">
+              {TIMELINE.map((step, i) => {
+                const done = i < activeIndex
+                const active = i === activeIndex
+                const upcoming = i > activeIndex
+
+                return (
+                  <div key={step.id} className="flex gap-4">
+                    {/* Line + circle */}
+                    <div className="flex flex-col items-center">
+                      <div className={`h-8 w-8 rounded-full border-2 flex items-center justify-center shrink-0 transition-all duration-300 ${
+                        done ? 'border-accent bg-accent text-accent-foreground' :
+                        active ? 'border-primary bg-primary text-primary-foreground' :
+                        'border-border bg-background text-muted-foreground'
+                      }`}>
+                        {done ? <Check size={13} /> : step.icon}
+                      </div>
+                      {i < TIMELINE.length - 1 && (
+                        <div className={`w-px flex-1 my-1 min-h-[2rem] transition-colors duration-300 ${
+                          done ? 'bg-accent' : 'bg-border'
+                        }`} />
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className={`pb-6 flex flex-col gap-0.5 ${i === TIMELINE.length - 1 ? 'pb-0' : ''}`}>
+                      <p className={`text-sm font-semibold leading-tight ${
+                        upcoming ? 'text-muted-foreground' : 'text-foreground'
+                      }`}>
+                        {step.label}
+                      </p>
+                      <p className={`text-xs ${upcoming ? 'text-muted-foreground/60' : 'text-muted-foreground'}`}>
+                        {step.desc}
+                      </p>
+                      {done && (
+                        <p className="text-xs text-accent font-medium mt-0.5">✓ Completed</p>
+                      )}
+                      {active && currentStatus !== 'delivered' && (
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
+                          <p className="text-xs text-accent font-medium">In progress</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+        )}
 
         {/* Info */}
         {currentStatus === 'ready' && (

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { ArrowLeft, ArrowRight, CheckCircle, Smartphone } from 'lucide-react'
+import { ArrowLeft, ArrowRight, CheckCircle, Smartphone, RefreshCw } from 'lucide-react'
 import { useCart } from '../contexts/CartContext'
 import { apiRequest } from '../utils/api'
 import { SOCIETY_CONFIG, formatPrice } from '../data/mockData'
@@ -9,39 +9,22 @@ import UploadCard from '../components/UploadCard'
 import Button from '../components/Button'
 import EmptyState from '../components/EmptyState'
 import Footer from '../components/Footer'
+import { useAuth } from '../contexts/AuthContext'
 
-type Step = 1 | 2 | 3
-
-interface Details {
-  name: string
-  email: string
-  phone: string
-  rollNo: string
-  college: string
-  notes: string
-}
+type Step = 1 | 2
 
 const HANDLING_FEE = 49
 
 export default function CheckoutPage() {
   const { items, totalPrice, clearCart } = useCart()
   const navigate = useNavigate()
+  const { user, loading: authLoading, login } = useAuth()
   const [step, setStep] = useState<Step>(1)
-  const [details, setDetails] = useState<Details>({ name: '', email: '', phone: '', rollNo: '', college: '', notes: '' })
   const [paymentScreenshot, setPaymentScreenshot] = useState('')
   const [placing, setPlacing] = useState(false)
   const [createdOrderId, setCreatedOrderId] = useState('')
 
   const totalAmount = totalPrice + HANDLING_FEE
-
-  const setField = (key: keyof Details) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
-    setDetails(prev => ({ ...prev, [key]: e.target.value }))
-
-  const handleStep1 = () => {
-    if (!details.name || !details.email || !details.phone || !details.rollNo) return
-    setStep(2)
-    window.scrollTo(0, 0)
-  }
 
   const handlePlaceOrder = async () => {
     if (!paymentScreenshot) return
@@ -56,7 +39,6 @@ export default function CheckoutPage() {
       const payload = {
         items: orderItems,
         totalPrice: totalAmount,
-        details,
         paymentScreenshot
       }
       const data = await apiRequest('/orders', {
@@ -66,7 +48,7 @@ export default function CheckoutPage() {
       if (data && data.order) {
         setCreatedOrderId(data.order.orderId)
         clearCart()
-        setStep(3)
+        setStep(2)
       }
     } catch (err) {
       console.error(err)
@@ -78,12 +60,45 @@ export default function CheckoutPage() {
   }
 
   const steps = [
-    { n: 1, label: 'Details' },
-    { n: 2, label: 'Payment' },
-    { n: 3, label: 'Confirmed' },
+    { n: 1, label: 'Payment' },
+    { n: 2, label: 'Confirmed' },
   ]
 
-  if (items.length === 0 && step !== 3) {
+  if (authLoading) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-1 flex flex-col items-center justify-center py-20">
+          <RefreshCw size={24} className="animate-spin text-accent mb-4" />
+          <p className="text-sm text-muted-foreground">Checking authentication status...</p>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (!user) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <div className="flex-1 flex flex-col items-center justify-center max-w-sm mx-auto px-6 py-20 text-center gap-5">
+          <div className="h-16 w-16 rounded-full bg-accent/10 flex items-center justify-center">
+            <Smartphone size={30} className="text-accent" />
+          </div>
+          <div className="flex flex-col gap-1">
+            <h2 className="text-xl font-bold text-foreground">Login Required</h2>
+            <p className="text-sm text-muted-foreground">
+              Please sign in with your society account to proceed with checkout and place your order.
+            </p>
+          </div>
+          <Button variant="primary" size="lg" className="w-full" onClick={login}>
+            Sign In with Google
+          </Button>
+        </div>
+        <Footer />
+      </div>
+    )
+  }
+
+  if (items.length === 0 && step !== 2) {
     return (
       <div className="flex flex-col min-h-screen">
         <div className="flex-1 flex flex-col items-center justify-center">
@@ -128,69 +143,8 @@ export default function CheckoutPage() {
           ))}
         </div>
 
-        {/* Step 1: Details */}
+        {/* Step 1: Payment */}
         {step === 1 && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
-            <div className="lg:col-span-2 flex flex-col gap-5">
-              <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-5">
-                <h2 className="font-semibold text-foreground">Your Details</h2>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {[
-                    { key: 'name' as const, label: 'Full Name', placeholder: 'Aditya Kumar', required: true },
-                    { key: 'email' as const, label: 'Email', placeholder: 'aditya@college.edu', required: true },
-                    { key: 'phone' as const, label: 'Phone', placeholder: '+91 98765 43210', required: true },
-                    { key: 'rollNo' as const, label: 'Roll Number', placeholder: 'CS21B001', required: true },
-                    { key: 'college' as const, label: 'College / Department', placeholder: 'CSE, 3rd Year', required: false },
-                  ].map(field => (
-                    <div key={field.key} className="flex flex-col gap-1.5">
-                      <label className="text-sm font-medium text-foreground flex items-center gap-1">
-                        {field.label}
-                        {field.required && <span className="text-red-500">*</span>}
-                      </label>
-                      <input
-                        type={field.key === 'email' ? 'email' : field.key === 'phone' ? 'tel' : 'text'}
-                        value={details[field.key]}
-                        onChange={setField(field.key)}
-                        placeholder={field.placeholder}
-                        className="h-10 px-3.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all"
-                      />
-                    </div>
-                  ))}
-
-                  <div className="sm:col-span-2 flex flex-col gap-1.5">
-                    <label className="text-sm font-medium text-foreground">Order Notes (optional)</label>
-                    <textarea
-                      value={details.notes}
-                      onChange={setField('notes')}
-                      placeholder="Any special instructions…"
-                      rows={2}
-                      className="px-3.5 py-2.5 bg-background border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:border-transparent transition-all resize-none"
-                    />
-                  </div>
-                </div>
-
-                <Button
-                  variant="primary"
-                  size="lg"
-                  className="self-end"
-                  disabled={!details.name || !details.email || !details.phone || !details.rollNo}
-                  onClick={handleStep1}
-                >
-                  Continue to Payment
-                  <ArrowRight size={16} />
-                </Button>
-              </div>
-            </div>
-
-            <div>
-              <OrderSummary showItems />
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: Payment */}
-        {step === 2 && (
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 animate-fade-in">
             <div className="lg:col-span-2 flex flex-col gap-5">
               <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-6">
@@ -236,7 +190,7 @@ export default function CheckoutPage() {
                 />
 
                 <div className="flex items-center gap-3">
-                  <Button variant="outline" onClick={() => setStep(1)}>
+                  <Button variant="outline" onClick={() => navigate('/cart')}>
                     <ArrowLeft size={14} />
                     Back
                   </Button>
@@ -261,8 +215,8 @@ export default function CheckoutPage() {
           </div>
         )}
 
-        {/* Step 3: Success */}
-        {step === 3 && (
+        {/* Step 2: Success */}
+        {step === 2 && (
           <div className="flex flex-col items-center text-center gap-6 py-16 animate-fade-in">
             <div className="h-20 w-20 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
               <CheckCircle size={36} className="text-emerald-500" />
