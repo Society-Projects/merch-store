@@ -25,9 +25,10 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: 22
           script: |
-            cd /root/ayush-projects/merch-store
-            
-            git pull origin main
-            npm ci
-            pm2 restart merch-store-backend || pm2 start src/index.js --name merch-store-backend
+                bash -lc '
+                  cd /root/ayush-projects/merch-store
+                  git pull origin main
+                  npm ci
+                  pm2 restart merch-store-backend
+                '
             
