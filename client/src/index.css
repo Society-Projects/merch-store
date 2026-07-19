@@ -1,0 +1,95 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Design tokens ─── Change --society-accent to rebrand for any society */
+:root {
+  --society-accent: #4338ca;
+  --society-accent-foreground: #ffffff;
+
+  --background: #ffffff;
+  --foreground: #09090b;
+  --card: #fafafa;
+  --card-foreground: #09090b;
+  --primary: #09090b;
+  --primary-foreground: #ffffff;
+  --secondary: #f4f4f5;
+  --secondary-foreground: #18181b;
+  --muted: #f4f4f5;
+  --muted-foreground: #71717a;
+  --accent: var(--society-accent);
+  --accent-foreground: var(--society-accent-foreground);
+  --border: #e4e4e7;
+  --ring: var(--society-accent);
+  --radius: 12px;
+}
+
+.dark {
+  --background: #09090b;
+  --foreground: #fafafa;
+  --card: #18181b;
+  --card-foreground: #fafafa;
+  --primary: #fafafa;
+  --primary-foreground: #09090b;
+  --secondary: #27272a;
+  --secondary-foreground: #fafafa;
+  --muted: #27272a;
+  --muted-foreground: #a1a1aa;
+  --border: #27272a;
+}
+
+@theme inline {
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-border: var(--border);
+  --color-ring: var(--ring);
+}
+
+html {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 9999px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted-foreground); }
+
+.scrollbar-hide { scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+@keyframes slide-in-right {
+  from { transform: translateX(100%); }
+  to { transform: translateX(0); }
+}
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(110%); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.animate-slide-in-right { animation: slide-in-right 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+.animate-fade-in { animation: fade-in 0.25s ease; }
+.animate-toast-in { animation: toast-in 0.35s cubic-bezier(0.32, 0.72, 0, 1); }
