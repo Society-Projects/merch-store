@@ -1,0 +1,33 @@
+name: Deploy Backend
+
+on:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - 'client/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest 
+
+    environment: Production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy Via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USERNAME }}
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: 22
+          script: |
+            cd /root/ayush-projects/merch-store
+            
+            git pull origin main
+            npm ci
+            pm2 restart merch-store-backend || pm2 start src/index.js --name merch-store-backend
+            
