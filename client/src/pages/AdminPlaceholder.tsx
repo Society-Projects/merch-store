@@ -130,20 +130,12 @@ export default function AdminPlaceholder() {
       reader.onload = async () => {
         try {
           const base64 = reader.result as string
-          const response = await fetch('/api/v1/upload', {
+          const imageUrl = await apiRequest('/upload', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
             body: JSON.stringify({ file: base64 })
           })
-          const data = await response.json()
-          if (response.ok && data.data) {
-            setNewProduct(prev => ({ ...prev, image: data.data }))
-            toast('Product image uploaded successfully', 'success')
-          } else {
-            throw new Error(data.message || 'Upload failed')
-          }
+          setNewProduct(prev => ({ ...prev, image: imageUrl }))
+          toast('Product image uploaded successfully', 'success')
         } catch (err) {
           toast('Upload failed: ' + (err as Error).message, 'error')
         } finally {
